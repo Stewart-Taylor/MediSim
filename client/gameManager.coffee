@@ -54,26 +54,9 @@ class GameManager
         setInterval ()->
             htmlupdate()
         ,1000
-        # @setUp = (gameManager) ->
 
-
-        #     setInterval ()->
-
-
-        #         update = () ->
-        #             gameManager.levelManager.update()
-
-
-        #         update()
-
-
-        #     , 30
-
-            # gameManager.update(gameManager)
 
     update = ()->
-        # console.log("update")
-        # console.log(levelManager)
         levelManager.update()
 
 
