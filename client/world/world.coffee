@@ -3,7 +3,7 @@
 WORLD_HEIGHT = 30
 WORLD_WIDTH = 50
 
-TOWN_COUNT = 4
+TOWN_COUNT = 8
 
 class World
 
@@ -40,15 +40,17 @@ class World
 
 
         vCount = 0
+        townId = 1
         while vCount < TOWN_COUNT
 
             randX = Math.floor((Math.random() * WORLD_WIDTH - 2) + 1)
             randY = Math.floor((Math.random() * WORLD_HEIGHT - 2) + 1)
 
-            town = new Town(this, randX, randY)
+            town = new Town(this,townId, randX, randY)
             @towns.push(town)
 
             vCount++
+            townId++
 
 
     update: () ->

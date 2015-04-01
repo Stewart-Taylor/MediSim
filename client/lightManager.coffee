@@ -7,14 +7,12 @@ class LightManager
         y = 500
         z = 20
 
-        # scene.add new (THREE.AmbientLight)(0x212223)
+        scene.add new (THREE.AmbientLight)(0x212223)
 
         @spotLight = new THREE.DirectionalLight( 0xffffffd);
         @spotLight.position.set( 1, 1, 0 )
 
-
-
-        @spotLight.castShadow = true
+        @spotLight.castShadow = false
         @spotLight.shadowCameraVisible = true
         # @spotLight.shadowMapWidth = 1048
         # @spotLight.shadowMapHeight = 1048
@@ -27,8 +25,3 @@ class LightManager
 
 
         scene.add @spotLight
-
-
-    update: ()->
-        # @light.rotation.y += 0.1
-        # @spotLight.position.y += 1

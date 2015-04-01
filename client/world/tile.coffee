@@ -12,6 +12,8 @@ class Tile
         tileColor = new THREE.Color( 0, value, 0 );
 
         @isLand = true
+        @hasOwner = false
+        @owner = null
 
         if type == 1
             @isLand = true
@@ -25,8 +27,6 @@ class Tile
             @isLand = false
             isWater = true
             cube = new THREE.Mesh(new THREE.CylinderGeometry(0, 7, 10, 10, 10, false), new (THREE.MeshLambertMaterial)(color: 0x95a5a6))
-            # cube = new (THREE.Mesh)(new (THREE.CubeGeometry)(5, 10, 5), new (THREE.MeshLambertMaterial)(color: 0x95a5a6))
-
 
         cube.position.y = 1
         cube.position.x = x * 5
@@ -34,9 +34,3 @@ class Tile
         cube.castShadow = false
         cube.receiveShadow = true
         world.scene.add cube
-
-
-
-
-
-

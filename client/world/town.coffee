@@ -1,8 +1,9 @@
 class Town
 
 
-    constructor: (world, x,y) ->
+    constructor: (world, id, x,y) ->
 
+        @id = id
         @world = world
         @population = 10
         @food = 100
@@ -15,7 +16,6 @@ class Town
         @x = x
         @y = y
 
-
         @cube = new (THREE.Mesh)(new (THREE.CubeGeometry)(5, 10, 5), new (THREE.MeshLambertMaterial)(color: 0x2c3e50))
         @cube.position.y = 1
         @cube.position.x = x * 5
@@ -24,9 +24,7 @@ class Town
         @cube.receiveShadow = true
         world.scene.add @cube
 
-
-
-        # @buyFarm()
+        @expandBorders(@x, @y)
 
 
     update: () ->
@@ -63,7 +61,8 @@ class Town
             farm = new Farm(this,bestTile.x , bestTile.y)
             @farms.push(farm)
             @gold -= @farmPrice
-            @farmPrice = @farmPrice + 100
+            @farmPrice = @farmPrice * 1.2
+            @expandBorders(bestTile.x, bestTile.y)
         else
             @expandTown()
 
@@ -76,6 +75,7 @@ class Town
             newBuilding = new Building(this, newBuildingTile.x, newBuildingTile.y)
             @buildings.push(newBuilding)
             @consumeRate += 0.1
+            @expandBorders(newBuildingTile.x, newBuildingTile.y)
 
             @degradeFarmTiles(newBuildingTile.x, newBuilding.y)
 
@@ -230,20 +230,96 @@ class Town
 
     isFarmTileAvalaible: (theTile) ->
         if theTile?
-            if theTile.hasFarm == false && theTile.hasBuilding == false && theTile.isLand
+            if theTile.hasFarm == false && theTile.hasBuilding == false && theTile.isLand && @isOwner(theTile) == true
+                if @hasOtherBorder(theTile.x, theTile.y) == false
+                    return true
+                else
+                    return false
+            else
+                return false
+        else
+            return false
+
+
+    isOwner: (theTile) ->
+        if theTile.hasOwner == false
+            return false
+        else
+            if theTile.owner.id == @id
+                return true
+
+
+    hasOtherBorder: (x,y) ->
+        count = 0
+        count += @isOtherBorder(x - 1, y - 1)
+        count += @isOtherBorder(x , y - 1)
+        count += @isOtherBorder(x + 1, y - 1)
+        count += @isOtherBorder(x - 1, y )
+        count += @isOtherBorder(x + 1, y )
+        count += @isOtherBorder(x - 1, y + 1)
+        count += @isOtherBorder(x , y + 1)
+        count += @isOtherBorder(x + 1, y + 1)
+
+        if count > 0
+            return true
+        else
+            return false
+
+
+    isOtherBorder: (x,y) ->
+        otherTile = @world.getTile(x,y)
+        if otherTile?
+            if otherTile.hasOwner == true
+                if otherTile.owner.id == @id
+                    return 0
+                else
+                    return 1
+            else
+                return 0
+        else
+            return 0
+
+
+
+
+    isBuildingTileAvalaible: (theTile) ->
+        if theTile?
+            if theTile.hasFarm == true && theTile.hasBuilding == false && @isOwner(theTile) == true
                 return true
             else
                 return false
         else
             return false
 
-    isBuildingTileAvalaible: (theTile) ->
-        if theTile?
-            if theTile.hasFarm == true && theTile.hasBuilding == false
-                return true
-            else
-                return false
-        else
-            return false
+
+    expandBorders: (x,y) ->
+        @claimTile(x - 1, y - 1)
+        @claimTile(x , y - 1)
+        @claimTile(x + 1, y - 1)
+        @claimTile(x - 1, y )
+        @claimTile(x + 1, y )
+        @claimTile(x - 1, y + 1)
+        @claimTile(x , y + 1)
+        @claimTile(x + 1, y + 1)
+
+
+    claimTile: (x,y) ->
+        claimTile = @world.getTile(x,y)
+        if claimTile?
+            if claimTile.hasOwner == false
+                if @hasOtherBorder(x,y ) == false
+                    claimTile.hasOwner = true
+                    claimTile.owner = this
+                    claimMaterial = new (THREE.MeshLambertMaterial)(color: 0x3498db)
+                    claimMaterial.transparent = true
+                    claimMaterial.opacity = 0.3
+                    @cube = new (THREE.Mesh)(new (THREE.CubeGeometry)(5, 3, 5), claimMaterial)
+                    @cube.position.y = 1
+                    @cube.position.x = x * 5
+                    @cube.position.z = y * 5
+                    @cube.castShadow = true
+                    @cube.receiveShadow = true
+                    @world.scene.add @cube
+
 
 
