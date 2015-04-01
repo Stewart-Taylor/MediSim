@@ -1,25 +1,84 @@
 
-WORLD_WIDTH = 50
-WORLD_HEIGHT = 20
-COAST_ERODE_PASSES = 5
-
 class WorldGenerator
 
-    LAND_TILE = "#"
-    WATER_TILE = "."
+    WORLD_WIDTH = 50
+    WORLD_HEIGHT = 20
+    COAST_ERODE_PASSES = 5
+    MOUNTAIN_PASSES = 7
+
+    LAND_TILE = 1
+    LAND_TILE_CHAR = "#"
+
+    WATER_TILE = 2
+    WATER_TILE_CHAR = "."
+
+    MOUNTAIN_TILE = 3
+    MOUNTAIN_TILE_CHAR = "^"
+
 
 
     constructor: () ->
         @map = []
+        @mpass_value = 0.5
 
 
     generateWorld: () ->
-
+        timestart = Date.now()
         @createBaseLand()
         @createWaterEdges()
         @coastErode()
+        @addMountains()
+        @time_taken = Date.now() - timestart
 
         return @map
+
+
+    addMountains: () ->
+
+        mountainTiles = []
+        mountainPlaces = 4
+
+        while mountainPlaces > 0
+            rX = Math.floor(Math.random() * WORLD_WIDTH) + 1
+            rY = Math.floor(Math.random() * WORLD_HEIGHT) + 1
+
+            tile = @getTile(rX, rY)
+            if tile?
+                if tile.type == LAND_TILE
+                    tile.type = MOUNTAIN_TILE
+                    mountainTiles. push tile
+                    mountainPlaces--
+
+        passes = Math.floor(Math.random() * MOUNTAIN_PASSES) + 3
+        while passes > 0
+            @mountainPass()
+            @mpass_value -= 0.1
+            if mpass_value < 0.1
+                mpass_value = 0.1
+            passes--
+
+
+
+    mountainPass: () ->
+
+        mountainTiles = []
+        for tile in @map
+            if tile.type == MOUNTAIN_TILE
+                mountainTiles.push tile
+
+        for mountainTile in mountainTiles
+            @convertMountainTile(mountainTile.x, mountainTile.y - 1)
+            @convertMountainTile(mountainTile.x + 1, mountainTile.y)
+            @convertMountainTile(mountainTile.x - 1, mountainTile.y)
+            @convertMountainTile(mountainTile.x, mountainTile.y + 1)
+
+
+    convertMountainTile: (x, y) ->
+        tile = @getTile(x,y)
+        if tile?
+            rValue = Math.random()
+            if rValue < @mpass_value
+                tile.type = MOUNTAIN_TILE
 
 
     #Creates the base land map
@@ -105,11 +164,21 @@ class WorldGenerator
             lineString = ""
             x = 0
             while x < WORLD_WIDTH
-                lineString += gen.getTile(x,y).type
+                lineString += @getTileChar(gen.getTile(x,y).type)
                 x++
             console.log(lineString)
             y++
         console.log()
+        console.log("" + @time_taken + "ms" )
+        console.log()
+
+    getTileChar: (type) ->
+        if type == LAND_TILE
+            return LAND_TILE_CHAR
+        else if type == WATER_TILE
+            return WATER_TILE_CHAR
+        else if type == MOUNTAIN_TILE
+            return MOUNTAIN_TILE_CHAR
 
 
 gen = new WorldGenerator()
