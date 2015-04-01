@@ -3,7 +3,7 @@
 WORLD_HEIGHT = 30
 WORLD_WIDTH = 50
 
-TOWN_COUNT = 10
+TOWN_COUNT = 4
 
 class World
 
@@ -21,10 +21,18 @@ class World
         while x < WORLD_WIDTH
             y= 0
             while y < WORLD_HEIGHT
+                typeValue = Math.floor((Math.random() * 100) + 1);
+                if typeValue < 2
+
+                    type = 3
+                else if ( typeValue > 4) && (typeValue < 8)
+                    type = 2
+                else
+                    type = 1
                 landValue = Math.random()
                 if landValue < 0.4
                     landValue = 0.4
-                newTile = new Tile(this, x, y, landValue)
+                newTile = new Tile(this, x, y, landValue, type)
                 @tiles.push(newTile)
                 y++
             x++

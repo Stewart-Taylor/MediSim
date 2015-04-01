@@ -1,6 +1,6 @@
 class Tile
 
-    constructor: (world, x,y, value) ->
+    constructor: (world, x,y, value, type) ->
 
         @x = x
         @y = y
@@ -11,12 +11,23 @@ class Tile
 
         tileColor = new THREE.Color( 0, value, 0 );
 
-        if type == 1
-            isLand = true
-        else if type = 2
-            isWater = true
+        @isLand = true
 
-        cube = new (THREE.Mesh)(new (THREE.CubeGeometry)(5, 1, 5), new (THREE.MeshLambertMaterial)(color: tileColor))
+        if type == 1
+            @isLand = true
+            cube = new (THREE.Mesh)(new (THREE.CubeGeometry)(5, 1, 5), new (THREE.MeshLambertMaterial)(color: tileColor))
+        else if type == 2
+            @isLand = false
+            isWater = true
+            cube = new (THREE.Mesh)(new (THREE.CubeGeometry)(5, 1, 5), new (THREE.MeshLambertMaterial)(color: 0x2980b9))
+
+        else if type == 3
+            @isLand = false
+            isWater = true
+            cube = new THREE.Mesh(new THREE.CylinderGeometry(0, 7, 10, 10, 10, false), new (THREE.MeshLambertMaterial)(color: 0x95a5a6))
+            # cube = new (THREE.Mesh)(new (THREE.CubeGeometry)(5, 10, 5), new (THREE.MeshLambertMaterial)(color: 0x95a5a6))
+
+
         cube.position.y = 1
         cube.position.x = x * 5
         cube.position.z = y * 5

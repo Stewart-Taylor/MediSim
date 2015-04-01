@@ -9,6 +9,7 @@ class Town
         @gold = 70
         @farmPrice = 100
         @buildings = []
+        @newBuildingCost = 1000
 
         @farms = []
         @x = x
@@ -19,7 +20,7 @@ class Town
         @cube.position.y = 1
         @cube.position.x = x * 5
         @cube.position.z = y * 5
-        @cube.castShadow = false
+        @cube.castShadow = true
         @cube.receiveShadow = true
         world.scene.add @cube
 
@@ -43,6 +44,7 @@ class Town
             @population += @population + 1
 
 
+
         # if @food
         # @cube.position.y += 0.1
 
@@ -61,7 +63,7 @@ class Town
             farm = new Farm(this,bestTile.x , bestTile.y)
             @farms.push(farm)
             @gold -= @farmPrice
-            @farmPrice = @farmPrice * 2
+            @farmPrice = @farmPrice + 100
         else
             @expandTown()
 
@@ -73,22 +75,48 @@ class Town
         if newBuildingTile?
             newBuilding = new Building(this, newBuildingTile.x, newBuildingTile.y)
             @buildings.push(newBuilding)
+            @consumeRate += 0.1
+
+            @degradeFarmTiles(newBuildingTile.x, newBuilding.y)
+
+            for farm in @farms
+                if (farm.x == newBuilding.x) && (farm.y == newBuilding.y)
+                    farm.active = false
+
 
 
     calculateFood: () ->
         foodAmount = 5
 
         for farm in @farms
-            farmValue = farm.value
-            farmAmount = 100 * farm.value
-            foodAmount += farmAmount
+            if farm.active == true
+                farmValue = farm.value
+                farmAmount = 100 * farm.value
+                foodAmount += farmAmount
 
         return foodAmount
 
 
 
 
+    degradeFarmTiles: (x, y) ->
+        @degradeFarmTile(@x, @y - 1)
+        @degradeFarmTile(@x - 1, @y )
+        @degradeFarmTile(@x + 1, @y )
+        @degradeFarmTile(@x , @y + 1 )
 
+
+
+    degradeFarmTile: (x,y) ->
+        currentTile = @world.getTile(x,y)
+        currentTile.value -= 0.1
+        if currentTile.value < 0.01
+            currentTile.value = 0.01
+
+        if currentTile.hasFarm
+            for farm in @farms
+                if (x == farm.x)  && ( y == farm.y)
+                    farm.value = currentTile.value
 
 
     findBestFarmTile: () ->
@@ -98,16 +126,24 @@ class Town
         #check up
 
         maxTile = @isBestTile(maxTile, @x, @y - 1)
+        maxTile = @isBestTile(maxTile, @x - 1, @y - 1)
+        maxTile = @isBestTile(maxTile, @x + 1, @y - 1)
         maxTile = @isBestTile(maxTile, @x - 1, @y )
         maxTile = @isBestTile(maxTile, @x + 1, @y )
         maxTile = @isBestTile(maxTile, @x , @y + 1 )
+        maxTile = @isBestTile(maxTile, @x + 1, @y + 1 )
+        maxTile = @isBestTile(maxTile, @x - 1, @y + 1 )
 
 
         for building in @buildings
             maxTile = @isBestTile(maxTile, building.x, building.y - 1)
+            maxTile = @isBestTile(maxTile, building.x + 1, building.y - 1)
+            maxTile = @isBestTile(maxTile, building.x - 1, building.y - 1)
             maxTile = @isBestTile(maxTile, building.x - 1, building.y )
             maxTile = @isBestTile(maxTile, building.x + 1, building.y )
             maxTile = @isBestTile(maxTile, building.x , building.y + 1 )
+            maxTile = @isBestTile(maxTile, building.x + 1, building.y + 1 )
+            maxTile = @isBestTile(maxTile, building.x - 1, building.y + 1 )
 
         return maxTile
 
@@ -130,23 +166,47 @@ class Town
                 return null
 
 
+
+    distanceToTown: (x,y) ->
+        distanceX = Math.abs(@x - x)
+        distanceY = Math.abs(@y - y)
+        distance = distanceX + distanceY
+        return distance
+
+
+    buildingTileValue: (theTile) ->
+        value = theTile.value
+        distance = @distanceToTown(theTile.x, theTile.y)
+
+        buildingValue = value * (distance *2)
+
+        return buildingValue
+
     findWorstFarmTile: () ->
 
         maxTile = null
 
         #check up
 
-        maxTile = @isWorstTile(maxTile, @x, @y - 1)
-        maxTile = @isWorstTile(maxTile, @x - 1, @y )
-        maxTile = @isWorstTile(maxTile, @x + 1, @y )
-        maxTile = @isWorstTile(maxTile, @x , @y + 1 )
+        maxTile = @isWorstTile(maxTile, @x, @y - 1) #up
+        # maxTile = @isWorstTile(maxTile, @x - 1, @y - 1) #up left
+        # maxTile = @isWorstTile(maxTile, @x + 1, @y - 1) #up right
+        maxTile = @isWorstTile(maxTile, @x - 1, @y )# left
+        maxTile = @isWorstTile(maxTile, @x + 1, @y )#right
+        maxTile = @isWorstTile(maxTile, @x , @y + 1 )#down
+        # maxTile = @isWorstTile(maxTile, @x - 1, @y + 1 )#down left
+        # maxTile = @isWorstTile(maxTile, @x + 1, @y + 1 )#down right
 
 
         for building in @buildings
-            maxTile = @isWorstTile(maxTile, building.x, building.y - 1)
-            maxTile = @isWorstTile(maxTile, building.x - 1, building.y )
-            maxTile = @isWorstTile(maxTile, building.x + 1, building.y )
-            maxTile = @isWorstTile(maxTile, building.x , building.y + 1 )
+            maxTile = @isWorstTile(maxTile, building.x, building.y - 1) #up
+            # maxTile = @isWorstTile(maxTile, building.x + 1, building.y - 1) #up right
+            # maxTile = @isWorstTile(maxTile, building.x - 1, building.y - 1) #up left
+            maxTile = @isWorstTile(maxTile, building.x - 1, building.y )#left
+            maxTile = @isWorstTile(maxTile, building.x + 1, building.y )#right
+            maxTile = @isWorstTile(maxTile, building.x , building.y + 1 )#down
+            # maxTile = @isWorstTile(maxTile, building.x + 1 , building.y + 1 )#down right
+            # maxTile = @isWorstTile(maxTile, building.x  - 1, building.y + 1 )#down left
 
         return maxTile
 
@@ -154,7 +214,7 @@ class Town
         if bestTile?
             currentTile = @world.getTile(x,y)
             if @isBuildingTileAvalaible(currentTile) == true
-                if currentTile.value < bestTile.value
+                if @buildingTileValue(currentTile) < @buildingTileValue(bestTile)
                     return currentTile
                 else
                     return bestTile
@@ -170,7 +230,7 @@ class Town
 
     isFarmTileAvalaible: (theTile) ->
         if theTile?
-            if theTile.hasFarm == false && theTile.hasBuilding == false
+            if theTile.hasFarm == false && theTile.hasBuilding == false && theTile.isLand
                 return true
             else
                 return false

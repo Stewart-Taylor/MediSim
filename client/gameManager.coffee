@@ -100,7 +100,7 @@ class GameManager
 
         setInterval ()->
             htmlupdate()
-        ,30
+        ,1000
         # @setUp = (gameManager) ->
 
 
