@@ -9,7 +9,7 @@ class LightManager
 
         scene.add new (THREE.AmbientLight)(0x212223)
 
-        @spotLight = new THREE.DirectionalLight( 0xffffffd);
+        @spotLight = new THREE.DirectionalLight( 0xffffffd)
         @spotLight.position.set( 1, 1, 0 )
 
         @spotLight.castShadow = false

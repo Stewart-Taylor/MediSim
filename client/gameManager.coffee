@@ -6,10 +6,11 @@ class GameManager
     controlManager = null
     levelManager = null
     lightManager = null
-    actorManager = null
 
 
     constructor: (scene) ->
+
+        @paused = false
 
         renderer = new (THREE.WebGLRenderer)(antialias: true)
         renderer.setSize window.innerWidth, window.innerHeight
@@ -17,10 +18,10 @@ class GameManager
         document.body.appendChild renderer.domElement
         scene = new (THREE.Scene)
 
-        cameraManager = new CameraManager(scene);
-        controlManager = new ControlManager(scene, cameraManager);
-        levelManager = new LevelManager(scene);
-        lightManager = new LightManager(scene);
+        cameraManager = new CameraManager(scene)
+        controlManager = new ControlManager(scene, cameraManager, GameManager) #TODO: only pass GameManager
+        levelManager = new LevelManager(scene)
+        lightManager = new LightManager(scene)
 
 
         renderer.shadowMapEnabled = true
@@ -35,9 +36,9 @@ class GameManager
 
 
         render = ->
-          requestAnimationFrame render
-          renderer.render scene, cameraManager.camera
-          return
+            requestAnimationFrame render
+            renderer.render scene, cameraManager.camera
+            return
 
         render()
 
@@ -57,13 +58,14 @@ class GameManager
 
 
     update = ()->
-        levelManager.update()
+        if @paused == false
+            levelManager.update()
 
 
 
     htmlupdate = () ->
         # console.log(levelManager)
-        $('#town1').html("Town 1: Pop: " + levelManager.world.towns[0].population + " food: " + levelManager.world.towns[0].food + " gold: " + levelManager.world.towns[0].gold)
+        $('#town1').html("Town 1: Pop: " + levelManager.world.towns[0].population + " food: " + levelManager.world.towns[0].food + " gold: " + levelManager.world.towns[0].gold + " UP: " + levelManager.world.towns[0].unitPoints)
 
 
 

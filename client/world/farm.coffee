@@ -6,8 +6,12 @@ class Farm
         @x = x
         @y = y
 
-        @cube = new (THREE.Mesh)(new (THREE.CubeGeometry)(5, 1, 5), new (THREE.MeshLambertMaterial)(color: 0xd35400))
-        @cube.position.y = 1
+        material = new (THREE.MeshLambertMaterial)(color: 0xd35400)
+        material.transparent = true
+        material.opacity = 0.5
+
+        @cube = new (THREE.Mesh)(new (THREE.CubeGeometry)(3, 1, 3), material)
+        @cube.position.y = 1.2
         @cube.position.x = x * 5
         @cube.position.z = y * 5
         @cube.castShadow = false
@@ -20,3 +24,5 @@ class Farm
         @landValue = @value
 
         @active = true
+
+

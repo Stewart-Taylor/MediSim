@@ -5,7 +5,7 @@ module.exports = (grunt) ->
 
         watch:
             src:
-                files: ['client/**/*']
+                files: ['client/**/*', 'public/style.css', 'views/**/*.ejs']
                 tasks: ['client']
             gruntfile:
                 files: 'gruntfile.coffee'
@@ -13,7 +13,7 @@ module.exports = (grunt) ->
                     reload: true
 
         coffeelint:
-            app: ['src/*.coffee']
+            app: ['client/**/*.coffee']
             options:
                 configFile: "coffeelint.json"
 
@@ -28,6 +28,8 @@ module.exports = (grunt) ->
             tmp:
                 src: ['tmp/']
 
+        todo:
+            src: ['client/**/*.coffee']
 
 
 
@@ -35,8 +37,10 @@ module.exports = (grunt) ->
     grunt.loadNpmTasks 'grunt-contrib-coffee'
     grunt.loadNpmTasks 'grunt-coffeelint'
     grunt.loadNpmTasks 'grunt-contrib-clean'
+    grunt.loadNpmTasks 'grunt-todo'
 
 
-    grunt.registerTask 'client', ['clean', 'coffee', 'watch']
+
+    grunt.registerTask 'client', ['clean', 'coffeelint' , 'coffee', 'todo', 'watch']
     grunt.registerTask 'default', ['client']
 

@@ -9,7 +9,7 @@ class Tile
         @hasFarm = false
         @hasBuilding = false
 
-        tileColor = new THREE.Color( 0, value, 0 );
+        tileColor = new THREE.Color( 0, value, 0 )
 
         @isLand = true
         @hasOwner = false

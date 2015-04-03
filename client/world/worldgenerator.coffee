@@ -1,8 +1,8 @@
 
 class WorldGenerator
 
-    WORLD_WIDTH = 50
-    WORLD_HEIGHT = 20
+    WORLD_WIDTH = 60
+    WORLD_HEIGHT = 30
     COAST_ERODE_PASSES = 5
     MOUNTAIN_PASSES = 7
 
@@ -28,9 +28,54 @@ class WorldGenerator
         @createWaterEdges()
         @coastErode()
         @addMountains()
+        @generateYield()
         @time_taken = Date.now() - timestart
 
         return @map
+
+
+    generateYield: () ->
+
+        for tile in @map
+            if tile.type == LAND_TILE
+                rValue = Math.random()
+                if rValue < 0.2 #Min Cap
+                    rValue = 0.2
+                tile.value = rValue
+            else
+                tile.value = 0
+
+        passes = 1
+        while passes > 0
+            @smoothYield()
+            passes--
+
+    #TODO: Account for land tiles in tileCount
+    smoothYield: () ->
+        for tile in @map
+            total = 0
+            tileCount = 9
+
+            total += @adjacentTileLandValue(tile.x - 1, tile.y - 1)
+            total += @adjacentTileLandValue(tile.x, tile.y - 1)
+            total += @adjacentTileLandValue(tile.x + 1, tile.y - 1)
+            total += @adjacentTileLandValue(tile.x - 1 , tile.y)
+            total += @adjacentTileLandValue(tile.x + 1 , tile.y)
+            total += @adjacentTileLandValue(tile.x - 1, tile.y + 1)
+            total += @adjacentTileLandValue(tile.x, tile.y  + 1)
+            total += @adjacentTileLandValue(tile.x + 1, tile.y + 1)
+
+            avg = total / tileCount
+
+            tile.value = avg
+
+
+    adjacentTileLandValue: (x,y) ->
+        tile = @getTile(x,y)
+        if tile?
+            if tile.type == LAND_TILE
+                return tile.value
+        return 0
 
 
     addMountains: () ->
@@ -78,7 +123,8 @@ class WorldGenerator
         if tile?
             rValue = Math.random()
             if rValue < @mpass_value
-                tile.type = MOUNTAIN_TILE
+                if tile.type == LAND_TILE
+                    tile.type = MOUNTAIN_TILE
 
 
     #Creates the base land map
@@ -164,7 +210,8 @@ class WorldGenerator
             lineString = ""
             x = 0
             while x < WORLD_WIDTH
-                lineString += @getTileChar(gen.getTile(x,y).type)
+                # lineString += @getTileChar(gen.getTile(x,y))
+                lineString += (Math.round( gen.getTile(x,y).value * 10 )) + "|"
                 x++
             console.log(lineString)
             y++

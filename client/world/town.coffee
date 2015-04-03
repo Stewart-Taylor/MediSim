@@ -1,22 +1,24 @@
 class Town
 
 
-    constructor: (world, id, x,y) ->
+    constructor: (world, id, color, x,y) ->
 
         @id = id
         @world = world
+        @color = color
         @population = 10
         @food = 100
         @gold = 70
         @farmPrice = 100
         @buildings = []
         @newBuildingCost = 1000
+        @unitPoints = 0
 
         @farms = []
         @x = x
         @y = y
 
-        @cube = new (THREE.Mesh)(new (THREE.CubeGeometry)(5, 10, 5), new (THREE.MeshLambertMaterial)(color: 0x2c3e50))
+        @cube = new (THREE.Mesh)(new (THREE.CubeGeometry)(5, 10, 5), new (THREE.MeshLambertMaterial)(color: @color))
         @cube.position.y = 1
         @cube.position.x = x * 5
         @cube.position.z = y * 5
@@ -28,12 +30,9 @@ class Town
 
 
     update: () ->
-        # @population += 1
         @food += @calculateFood()
         foodDif = @food - @population
-        # if foodDif == 0
-        #     console.log("")
-        #     @population = @population / 2
+
         if foodDif < 0
             @population += foodDif
             @food = 0
@@ -43,13 +42,13 @@ class Town
 
 
 
-        # if @food
-        # @cube.position.y += 0.1
 
         @gold = @gold + @population / 2
 
         if @gold > @farmPrice
             @buyFarm()
+
+        @calculateUnitPoints()
 
     buyFarm: () ->
 
@@ -61,7 +60,7 @@ class Town
             farm = new Farm(this,bestTile.x , bestTile.y)
             @farms.push(farm)
             @gold -= @farmPrice
-            @farmPrice = @farmPrice * 1.2
+            @farmPrice = @farmPrice * 1.5
             @expandBorders(bestTile.x, bestTile.y)
         else
             @expandTown()
@@ -72,7 +71,7 @@ class Town
         newBuildingTile = @findWorstFarmTile()
 
         if newBuildingTile?
-            newBuilding = new Building(this, newBuildingTile.x, newBuildingTile.y)
+            newBuilding = new Building(this, @color, newBuildingTile.x, newBuildingTile.y)
             @buildings.push(newBuilding)
             @consumeRate += 0.1
             @expandBorders(newBuildingTile.x, newBuildingTile.y)
@@ -97,6 +96,16 @@ class Town
         return foodAmount
 
 
+    calculateUnitPoints: () ->
+        @unitPoints += @buildings.length
+
+        if @unitPoints > 1000
+            console.log("can buy unit")
+            buyAgent()
+
+    buyAgent: () ->
+        world.agentManager.addAgent(this, @x, @y)
+        @unitPoints -= 1000
 
 
     degradeFarmTiles: (x, y) ->
@@ -104,7 +113,6 @@ class Town
         @degradeFarmTile(@x - 1, @y )
         @degradeFarmTile(@x + 1, @y )
         @degradeFarmTile(@x , @y + 1 )
-
 
 
     degradeFarmTile: (x,y) ->
@@ -233,12 +241,7 @@ class Town
             if theTile.hasFarm == false && theTile.hasBuilding == false && theTile.isLand && @isOwner(theTile) == true
                 if @hasOtherBorder(theTile.x, theTile.y) == false
                     return true
-                else
-                    return false
-            else
-                return false
-        else
-            return false
+        return false
 
 
     isOwner: (theTile) ->
@@ -310,16 +313,17 @@ class Town
                 if @hasOtherBorder(x,y ) == false
                     claimTile.hasOwner = true
                     claimTile.owner = this
-                    claimMaterial = new (THREE.MeshLambertMaterial)(color: 0x3498db)
-                    claimMaterial.transparent = true
-                    claimMaterial.opacity = 0.3
-                    @cube = new (THREE.Mesh)(new (THREE.CubeGeometry)(5, 3, 5), claimMaterial)
-                    @cube.position.y = 1
-                    @cube.position.x = x * 5
-                    @cube.position.z = y * 5
-                    @cube.castShadow = true
-                    @cube.receiveShadow = true
-                    @world.scene.add @cube
+
+                    # claimMaterial = new (THREE.MeshLambertMaterial)(color: 0x3498db)
+                    # claimMaterial.transparent = true
+                    # claimMaterial.opacity = 0.3
+                    # @cube = new (THREE.Mesh)(new (THREE.CubeGeometry)(1, 6, 1), claimMaterial)
+                    # @cube.position.y = 1
+                    # @cube.position.x = x * 5
+                    # @cube.position.z = y * 5
+                    # @cube.castShadow = false
+                    # @cube.receiveShadow = false
+                    # @world.scene.add @cube
 
 
 
