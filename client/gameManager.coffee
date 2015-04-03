@@ -53,7 +53,7 @@ class GameManager
 
         setInterval () ->
             htmlupdate()
-        ,1000
+        ,100
 
 
     update = () ->
@@ -63,7 +63,22 @@ class GameManager
 
     htmlupdate = () ->
         # console.log(levelManager)
-        $('#town1').html("Town 1: Pop: " + levelManager.world.towns[0].population + " food: " + levelManager.world.towns[0].food + " foodDif: " + levelManager.world.towns[0].foodDif +  " gold: " + levelManager.world.towns[0].gold + " UP: " + levelManager.world.towns[0].unitPoints)
 
+        i = 0
+        while i < 8
+            color = levelManager.world.towns[i].color
+            console.log(color)
+            $('#town_' + (i + 1) + "_color").css( "background", "#" + color.toString(16) );
+            # $('#town_' + (i + 1) + "_pop").html("Pop:" + Math.floor(levelManager.world.towns[i].population) + "  ")
+            $('#town_' + (i + 1) + "_pop").html("Pop:" + Math.floor(levelManager.world.towns[i].population) + "  ")
+            # $('#town_' + (i + 1) + "_food").html("Food:" + Math.floor(levelManager.world.towns[i].food) + " | ")
+            # $('#town_' + (i + 1) + "_foodDiff").html("FoodDiff:" + Math.floor(levelManager.world.towns[i].foodDif) + " | ")
+            # $('#town_' + (i + 1) + "_gold").html("Gold:" + Math.floor(levelManager.world.towns[i].gold) + " | ")
+            # $('#town_' + (i + 1) + "_agents").html("Agents:" + Math.floor(levelManager.world.towns[i].getAgentCount()) )
+            i++
+
+        # $('#town1').html("Town 1: Pop: " + levelManager.world.towns[0].population + " food: " + levelManager.world.towns[0].food + " foodDif: " + levelManager.world.towns[0].foodDif +  " gold: " + levelManager.world.towns[0].gold + " Agents: " + levelManager.world.towns[0].getAgentCount())
+
+        # $('#town1').html("Town 1: Pop: " + levelManager.world.towns[0].population + " food: " + levelManager.world.towns[0].food + " foodDif: " + levelManager.world.towns[0].foodDif +  " gold: " + levelManager.world.towns[0].gold + " Agents: " + levelManager.world.towns[0].getAgentCount())
 
 

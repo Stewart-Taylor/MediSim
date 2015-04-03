@@ -70,6 +70,8 @@ class World
         for town in @towns
             town.update()
 
+        @agentManager.update()
+
 
     #TODO: A better way to getTile
     getTile: (x,y) ->

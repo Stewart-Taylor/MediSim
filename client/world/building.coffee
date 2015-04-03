@@ -14,10 +14,11 @@ class Building
         height = 4
 
 
-        @cube = new (THREE.Mesh)(new (THREE.CubeGeometry)(3, height, 3), new (THREE.MeshLambertMaterial)(color: @color))
+        @cube = new (THREE.Mesh)(new (THREE.BoxGeometry)(3, height, 3), new (THREE.MeshLambertMaterial)(color: @color))
         @cube.position.y = 1
         @cube.position.x = x * 5
         @cube.position.z = y * 5
+        @cube.rotation.y = x * y
         @cube.castShadow = true
         @cube.receiveShadow = true
         @town.world.scene.add @cube

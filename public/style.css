@@ -10,14 +10,62 @@ canvas
 }
 
 
-.stats_box{
-
+.display{
+    position: absolute;
 }
 
-.stat_box{
+.stats_box{
+    margin: 5px;
+    /*width: 300px;*/
+    padding: 4px;
+    overflow: hidden;
+    border-bottom: 1px solid #CAD6DD;
+}
 
+.town_color{
+    width: 15px;
+    height: 15px;
+    border-radius: 20px;
+    float: left;
 }
 
 .stat_item{
+    float: left;
+    margin-left: 4px;
+    font-size: 13px;
+    color: #80888C;
+}
 
+
+
+.town1{
+    background: #e74c3c;
+}
+
+.town2{
+    background: #e67e22;
+}
+
+.town3{
+    background: #6BB9F0;
+}
+
+.town4{
+    background: #DB0A5B;
+}
+
+.town5{
+    background: #F2784B;
+}
+
+.town6{
+    background: #90C695;
+}
+
+.town7{
+    background: #BE90D4;
+}
+
+.town8{
+    background: #8e44ad;
 }

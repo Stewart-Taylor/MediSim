@@ -51,6 +51,10 @@ class ControlManager
                     console.log 'Camera ROT X: ' + cameraManager.camera.rotation.x + ' Y: ' + cameraManager.camera.rotation.y + ' z: ' + cameraManager.camera.rotation.z
 
 
+                # if event.which == 75 #K
+                    # levelManager.world.towns[0].population = levelManager.world.towns[0].population / 2
+                    # levelManager.world.towns[0].food = levelManager.world.towns[0].food = 0
+
                 if event.which == 80
                     #Lets Pause
 

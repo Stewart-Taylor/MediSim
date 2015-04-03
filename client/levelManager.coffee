@@ -14,7 +14,6 @@ class LevelManager
 
 
     update: () ->
-        console.log("paused: " , @paused)
         if @paused == false
             @world.update()
 

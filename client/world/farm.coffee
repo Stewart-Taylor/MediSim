@@ -10,10 +10,13 @@ class Farm
         material.transparent = true
         material.opacity = 0.5
 
-        @cube = new (THREE.Mesh)(new (THREE.CubeGeometry)(3, 1, 3), material)
+        @cube = new (THREE.Mesh)(new (THREE.BoxGeometry)(3, 1, 3), material)
         @cube.position.y = 1.2
         @cube.position.x = x * 5
         @cube.position.z = y * 5
+
+        @cube.rotation.y = Math.random() * (10 - 1) + 1
+
         @cube.castShadow = false
         @cube.receiveShadow = true
         town.world.scene.add @cube

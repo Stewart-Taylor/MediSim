@@ -16,38 +16,48 @@ class Town
 
         @foodDeclineCounter = 0
 
+        @agents = []
+
         @farms = []
         @x = x
         @y = y
 
-        @cube = new (THREE.Mesh)(new (THREE.CubeGeometry)(5, 10, 5), new (THREE.MeshLambertMaterial)(color: @color))
+        @agentsCount = 0
+
+        @cube = new (THREE.Mesh)(new (THREE.BoxGeometry)(5, 10, 5), new (THREE.MeshLambertMaterial)(color: @color))
         @cube.position.y = 1
         @cube.position.x = x * 5
         @cube.position.z = y * 5
+        @cube.rotation.y = Math.random() * (10 - 1) + 1
         @cube.castShadow = true
         @cube.receiveShadow = true
         world.scene.add @cube
 
         @expandBorders(@x, @y)
+        @lastremoveCounter = 100
 
         @expandCount = 5
 
 
     update: () ->
         @food += @calculateFood()
-        @foodDif = @food - @population
+        @foodDif = @food - @population - (@agentsCount * 100)
 
         if @foodDif < 0
             @population += @foodDif
             if @population < 10
                 @population = 10
-            @
+
             @food = 0
 
             @foodDeclineCounter++
 
             # if @foodDeclineCounter > 300
-            @removeWorstBuilding()
+            if @lastremoveCounter <= 0
+                @removeWorstBuilding()
+                @lastremoveCounter = 100
+            @lastremoveCounter--
+
             # building = @buildings.pop()
             # if building?
             #     building.destroy()
@@ -61,12 +71,30 @@ class Town
 
         @population = Math.round(@population)
 
-        @gold = @gold + @population / 2
+        # @gold = @gold + @population / 2
 
         if @gold > @farmPrice
             @buyFarm()
 
         @calculateUnitPoints()
+
+
+    getClosestTarget: () ->
+        closestTown = null
+        townDistance = 10000
+        for town in @world.towns
+            if town.id != @id
+                xd = Math.abs(@x - town.x)
+                yd = Math.abs(@y - town.y)
+                cDistance = xd + yd
+                if cDistance < townDistance
+                    townDistance = cDistance
+                    closestTown = town
+
+        if closestTown?
+            return closestTown
+        else
+            return null
 
 
     increasePopulation: () ->
@@ -106,7 +134,6 @@ class Town
         bestTile = @findBestFarmTile()
 
 
-        console.log(bestTile)
         if bestTile?
             farm = new Farm(this,bestTile.x , bestTile.y)
             @farms.push(farm)
@@ -119,7 +146,6 @@ class Town
     expandTown: () ->
 
         if @population >= @getMaxPopulation()
-            console.log("ready to expand town")
 
             newBuildingTile = @findWorstFarmTile()
 
@@ -151,19 +177,45 @@ class Town
                     foodAmount += farmAmount
                     workingPopulation -= 10
 
+        @gold += 1
+        if workingPopulation > 0
+            @gold += Math.round(workingPopulation / 100)
+
         return foodAmount
 
 
     calculateUnitPoints: () ->
-        @unitPoints += @buildings.length
+        # @unitPoints += Math.round(@population / 100)
 
-        if @unitPoints > 1000
-            console.log("can buy unit")
+        if @gold > @getUnitCost()
             @buyAgent()
 
+    getUnitCost: () ->
+
+        cost = 10000
+        cost += cost * @getAgentCount()
+        return cost
+
+
     buyAgent: () ->
-        @world.agentManager.addAgent(this, @x, @y)
-        @unitPoints -= 1000
+        @gold -= @getUnitCost()
+        targetTown = @getClosestTarget()
+        if targetTown?
+            agent = @world.agentManager.addAgent(this,targetTown, @x, @y)
+            @agents.push agent
+            @unitPoints -= 1000
+        else #converts gold to food
+            @food += @gold / 2
+            @gold = @gold / 2
+
+
+    getAgentCount: () ->
+        aCount = 0
+        for agent in @agents
+            if agent.active == true
+                aCount++
+
+        return aCount
 
 
     degradeFarmTiles: (x, y) ->

@@ -15,11 +15,12 @@ class AgentManager
 
 
     update: () ->
-        for agent in agents
+        for agent in @agents
             agent.update()
 
 
-    addAgent: (town, x,y) ->
-        agent = new Agent(town,x,y)
+    addAgent: (town,targetTown, x,y) ->
+        agent = new Agent(town,targetTown, x,y)
         @agents.push agent
+        return agent
 
