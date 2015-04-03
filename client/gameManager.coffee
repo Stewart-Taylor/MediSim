@@ -10,7 +10,6 @@ class GameManager
 
     constructor: (scene) ->
 
-        @paused = false
 
         renderer = new (THREE.WebGLRenderer)(antialias: true)
         renderer.setSize window.innerWidth, window.innerHeight
@@ -19,8 +18,8 @@ class GameManager
         scene = new (THREE.Scene)
 
         cameraManager = new CameraManager(scene)
-        controlManager = new ControlManager(scene, cameraManager, GameManager) #TODO: only pass GameManager
         levelManager = new LevelManager(scene)
+        controlManager = new ControlManager(scene, cameraManager, levelManager) #TODO: only pass GameManager
         lightManager = new LightManager(scene)
 
 
@@ -52,20 +51,19 @@ class GameManager
         ,10
 
 
-        setInterval ()->
+        setInterval () ->
             htmlupdate()
         ,1000
 
 
-    update = ()->
-        if @paused == false
-            levelManager.update()
+    update = () ->
+        levelManager.update()
 
 
 
     htmlupdate = () ->
         # console.log(levelManager)
-        $('#town1').html("Town 1: Pop: " + levelManager.world.towns[0].population + " food: " + levelManager.world.towns[0].food + " gold: " + levelManager.world.towns[0].gold + " UP: " + levelManager.world.towns[0].unitPoints)
+        $('#town1').html("Town 1: Pop: " + levelManager.world.towns[0].population + " food: " + levelManager.world.towns[0].food + " foodDif: " + levelManager.world.towns[0].foodDif +  " gold: " + levelManager.world.towns[0].gold + " UP: " + levelManager.world.towns[0].unitPoints)
 
 
 

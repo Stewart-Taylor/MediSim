@@ -21,7 +21,7 @@ class Tile
         else if type == 2
             @isLand = false
             isWater = true
-            cube = new (THREE.Mesh)(new (THREE.CubeGeometry)(5, 1, 5), new (THREE.MeshLambertMaterial)(color: 0x2980b9))
+            cube = new (THREE.Mesh)(new (THREE.CubeGeometry)(5, 1, 5), new (THREE.MeshLambertMaterial)(color: 0x19B5FE))
 
         else if type == 3
             @isLand = false

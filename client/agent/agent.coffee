@@ -10,7 +10,7 @@ class Agent
         @cube.position.z = y * 5
         @cube.castShadow = false
         @cube.receiveShadow = false
-        scene.add @cube
+        town.world.scene.add @cube
 
         @targetX = 40 #TODO: Determine agents target
         @targetY = 40

@@ -67,6 +67,8 @@ class WorldGenerator
 
             avg = total / tileCount
 
+            if avg < 0.2
+                avg = 0.2
             tile.value = avg
 
 
@@ -210,8 +212,8 @@ class WorldGenerator
             lineString = ""
             x = 0
             while x < WORLD_WIDTH
-                # lineString += @getTileChar(gen.getTile(x,y))
-                lineString += (Math.round( gen.getTile(x,y).value * 10 )) + "|"
+                lineString += @getTileChar(gen.getTile(x,y).type)
+                # lineString += (Math.round( gen.getTile(x,y).value * 10 )) + "|"
                 x++
             console.log(lineString)
             y++
@@ -226,10 +228,3 @@ class WorldGenerator
             return WATER_TILE_CHAR
         else if type == MOUNTAIN_TILE
             return MOUNTAIN_TILE_CHAR
-
-
-gen = new WorldGenerator()
-
-
-gen.generateWorld()
-gen.printMapToConsole()

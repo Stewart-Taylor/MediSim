@@ -3,8 +3,10 @@ class LevelManager
 
     @world = null
 
+
     constructor: (scene) ->
         @scene = scene
+        @paused = false
         console.log("Level Manager Module Loaded")
 
     init: ()->
@@ -12,5 +14,7 @@ class LevelManager
 
 
     update: () ->
-        @world.update()
+        console.log("paused: " , @paused)
+        if @paused == false
+            @world.update()
 

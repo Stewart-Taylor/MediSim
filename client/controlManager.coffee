@@ -4,10 +4,11 @@ class ControlManager
 
 
 
-    constructor: (scene, cameraManager,gameManager) ->
+    constructor: (scene, cameraManager, levelManager) ->
         @scene = scene
         @gameManager = gameManager
         @cameraManager = cameraManager
+        @levelManager = levelManager
         console.log("ControlManager Module Loaded")
         console.log(@cameraManager)
 
@@ -52,10 +53,11 @@ class ControlManager
 
                 if event.which == 80
                     #Lets Pause
-                    if gameManager.paused == false
-                        gameManager.paused = true
+
+                    if levelManager.paused == false
+                        levelManager.paused = true
                     else
-                        gameManager.paused = false
+                        levelManager.paused = false
 
 
                 if event.which == 38 #up

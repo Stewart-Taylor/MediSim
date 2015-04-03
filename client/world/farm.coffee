@@ -18,11 +18,16 @@ class Farm
         @cube.receiveShadow = true
         town.world.scene.add @cube
 
-        myTile = town.world.getTile(x,y)
-        @value = myTile.value
-        myTile.hasFarm = true
+        @myTile = town.world.getTile(x,y)
+        @value = @myTile.value
+        @myTile.hasFarm = true
         @landValue = @value
 
         @active = true
 
 
+    check: () ->
+
+        if @myTile.hasBuilding == false
+            @myTile.hasFarm = true
+            @active = true

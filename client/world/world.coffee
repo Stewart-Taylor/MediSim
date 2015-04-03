@@ -6,14 +6,14 @@ WORLD_WIDTH = 50
 TOWN_COUNT = 8
 
 TOWN_COLORS = [
-    0xe74c3c
-    0xe67e22
-    0x3498db
-    0xe74c3c
-    0x2c3e50
-    0x27ae60
-    0xf39c12
-    0x8e44ad
+    0xe74c3c # red
+    0xe67e22 #orange
+    0x6BB9F0 #blue
+    0xDB0A5B #pink
+    0xF2784B #peach
+    0x90C695 #green
+    0xBE90D4 #light purple
+    0x8e44ad #dark purple
 ]
 
 
@@ -37,10 +37,10 @@ class World
 
 
         for gridTile in grid
-            landValue = Math.random()
-            if landValue < 0.4
-                landValue = 0.4
-            newTile = new Tile(this, gridTile.x, gridTile.y, landValue, gridTile.type)
+            # landValue = Math.random()
+            # if landValue < 0.4
+            #     landValue = 0.4
+            newTile = new Tile(this, gridTile.x, gridTile.y, gridTile.value, gridTile.type)
             @tiles.push(newTile)
 
         @placeTowns()
