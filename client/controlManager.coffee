@@ -45,10 +45,11 @@ class ControlManager
                 if event.which == 90
                     #W
                     cameraManager.camera.rotation.x += 0.1
-                if event.which == 76
-                    #W
-                    console.log 'Camera X: ' + cameraManager.camera.position.x + ' Y: ' + cameraManager.camera.position.y + ' z: ' + cameraManager.camera.position.z
-                    console.log 'Camera ROT X: ' + cameraManager.camera.rotation.x + ' Y: ' + cameraManager.camera.rotation.y + ' z: ' + cameraManager.camera.rotation.z
+                # if event.which == 76
+                #     #W
+
+                #     console.log 'Camera X: ' + cameraManager.camera.position.x + ' Y: ' + cameraManager.camera.position.y + ' z: ' + cameraManager.camera.position.z
+                #     console.log 'Camera ROT X: ' + cameraManager.camera.rotation.x + ' Y: ' + cameraManager.camera.rotation.y + ' z: ' + cameraManager.camera.rotation.z
 
 
                 # if event.which == 75 #K

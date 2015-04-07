@@ -6,6 +6,7 @@ class GameManager
     controlManager = null
     levelManager = null
     lightManager = null
+    stats = null
 
 
     constructor: (scene) ->
@@ -57,7 +58,12 @@ class GameManager
 
 
     update = () ->
+        timestart = Date.now()
         levelManager.update()
+        timeTaken = Date.now() - timestart
+
+        # console.log(timeD , "ms")
+
 
 
 
@@ -67,10 +73,10 @@ class GameManager
         i = 0
         while i < 8
             color = levelManager.world.towns[i].color
-            console.log(color)
+
             $('#town_' + (i + 1) + "_color").css( "background", "#" + color.toString(16) );
             # $('#town_' + (i + 1) + "_pop").html("Pop:" + Math.floor(levelManager.world.towns[i].population) + "  ")
-            $('#town_' + (i + 1) + "_pop").html("Pop:" + Math.floor(levelManager.world.towns[i].population) + "  ")
+            $('#town_' + (i + 1) + "_pop").html("Pop:" + Math.floor(levelManager.world.towns[i].population)  ) # + "  Tech: " + levelManager.world.towns[i].technologyFactor.toFixed(3) )
             # $('#town_' + (i + 1) + "_food").html("Food:" + Math.floor(levelManager.world.towns[i].food) + " | ")
             # $('#town_' + (i + 1) + "_foodDiff").html("FoodDiff:" + Math.floor(levelManager.world.towns[i].foodDif) + " | ")
             # $('#town_' + (i + 1) + "_gold").html("Gold:" + Math.floor(levelManager.world.towns[i].gold) + " | ")

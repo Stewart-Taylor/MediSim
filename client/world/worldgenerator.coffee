@@ -18,6 +18,8 @@ class WorldGenerator
 
 
     constructor: () ->
+        @WORLD_WIDTH = 60
+        @WORLD_HEIGHT = 30
         @map = []
         @mpass_value = 0.5
 

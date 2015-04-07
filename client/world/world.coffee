@@ -1,10 +1,5 @@
 
 
-WORLD_HEIGHT = 40
-WORLD_WIDTH = 50
-
-TOWN_COUNT = 8
-
 TOWN_COLORS = [
     0xe74c3c # red
     0xe67e22 #orange
@@ -16,54 +11,58 @@ TOWN_COLORS = [
     0x8e44ad #dark purple
 ]
 
+TOWN_COUNT = TOWN_COLORS.length
+
 
 class World
 
-    @towns = null
-
     constructor: (scene) ->
-
+        @scene = scene
         @towns = []
         @tiles = []
         @agentManager = new AgentManager(this)
-
-        @scene = scene
-        x = 0
-        y = 0
-
-
         worldGenerator = new WorldGenerator()
-        grid = worldGenerator.generateWorld()
 
+        @WORLD_WIDTH = worldGenerator.WORLD_WIDTH
+        @WORLD_HEIGHT = worldGenerator.WORLD_HEIGHT
+
+        @createWorld(worldGenerator)
+        @placeTowns(worldGenerator)
+
+
+    createWorld: (worldGenerator) ->
+        grid = worldGenerator.generateWorld()
+        @tiles = @createArray(worldGenerator.WORLD_WIDTH, worldGenerator.WORLD_HEIGHT)
 
         for gridTile in grid
-            # landValue = Math.random()
-            # if landValue < 0.4
-            #     landValue = 0.4
             newTile = new Tile(this, gridTile.x, gridTile.y, gridTile.value, gridTile.type)
-            @tiles.push(newTile)
-
-        @placeTowns()
+            @tiles[gridTile.x][gridTile.y] = newTile
 
 
+    createArray: (length) ->
+        arr = new Array(length or 0)
+        i = length
+        if arguments.length > 1
+            args = Array::slice.call(arguments, 1)
+            while i--
+                arr[length - 1 - i] = @createArray.apply(this, args)
+        return arr
 
+
+    #TODO: Check if towns are placed too close together
     placeTowns: () ->
+        placeCount = 0
+        while placeCount < TOWN_COUNT
 
-        vCount = 0
-        townId = 1
-        while vCount < TOWN_COUNT
-
-            x = Math.floor((Math.random() * WORLD_WIDTH - 1) + 1)
-            y = Math.floor((Math.random() * WORLD_HEIGHT - 1) + 1)
+            x = Math.floor((Math.random() * @WORLD_WIDTH - 1) + 1)
+            y = Math.floor((Math.random() * @WORLD_HEIGHT - 1) + 1)
 
             townTile = @getTile(x, y)
             if townTile?
                 if townTile.isLand
-                    town = new Town(this,townId,TOWN_COLORS[vCount], x, y)
+                    town = new Town(this, placeCount + 1, TOWN_COLORS[placeCount], x, y)
                     @towns.push(town)
-
-                    vCount++
-                    townId++
+                    placeCount++
 
 
     update: () ->
@@ -73,14 +72,9 @@ class World
         @agentManager.update()
 
 
-    #TODO: A better way to getTile
     getTile: (x,y) ->
-        if( x > 0) && ( x < WORLD_WIDTH)
-            if ( y > 0 ) && ( y < WORLD_HEIGHT)
-                for tempTile in @tiles
-
-                    if tempTile.x == x && tempTile.y == y
-                        return tempTile
-
+        if( x > 0) && ( x < @WORLD_WIDTH)
+            if ( y > 0 ) && ( y < @WORLD_HEIGHT)
+                return @tiles[x][y]
         return null
 

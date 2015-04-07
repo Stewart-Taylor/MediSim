@@ -1,9 +1,15 @@
 
 class Agent
 
-    constructor: (town,targetTown, x,y) ->
+    constructor: (world, town, x,y) ->
+        @x = x
+        @y = y
+
         @town = town
-        @targetTown = targetTown
+
+        @healthBar = new HealthBar(this)
+        # @targetTown = targetTown
+
         material = new (THREE.MeshLambertMaterial)(color: @town.color)
         @cube = new (THREE.Mesh)(new (THREE.BoxGeometry)(1, 3, 1), material)
         @cube.position.y = 3
@@ -11,61 +17,151 @@ class Agent
         @cube.position.z = y * 5
         @cube.castShadow = false
         @cube.receiveShadow = false
-        town.world.scene.add @cube
+        @town.world.scene.add @cube
 
-        @targetX = @targetTown.x
-        @targetY = @targetTown.y
-
-        @x = x
-        @y = y
+        @world = world
+        @target = null
+        # @targetX = @targetTown.x
+        # @targetY = @targetTown.y
 
         @speed = 0.01
         @health = 1000
+        @maxHealth = @health
         @strength = 1
 
         @active = true
 
 
+    updateTarget: () ->
+        closeTown = @getClosestTargetTown()
+        closeUnit = @getClosestUnitTarget()
+        if closeTown != null && closeUnit != null
+            if closeTown.distance < closeUnit.distance
+                @target = closeTown.target
+                @targetX = @target.x
+                @targetY = @target.y
+            else
+                @target = closeUnit.target
+                @targetX = @target.x
+                @targetY = @target.y
+        else if closeTown == null && closeUnit != null
+            @target = closeUnit.target
+            @targetX = @target.x
+            @targetY = @target.y
+        else if closeTown != null && closeUnit == null
+            @target = closeTown.target
+            @targetX = @target.x
+            @targetY = @target.y
+        else
+            return null
+
+        #check for closest attackable object
+
+    getClosestUnitTarget: () ->
+        closeUnitTarget = null
+        minUnitDistance = 100000
+        for tempAgent in @world.agentManager.agents
+            if tempAgent.active == true
+                if @town.id != tempAgent.town.id
+                    xDistance = Math.abs(@x - tempAgent.x)
+                    yDistance = Math.abs(@y - tempAgent.y)
+                    totalDistance = xDistance + yDistance
+                    if totalDistance < minUnitDistance
+                        minUnitDistance = totalDistance
+                        closeUnitTarget = tempAgent
+
+        if closeUnitTarget?
+            targetObject = {}
+            targetObject.target = closeUnitTarget
+            targetObject.distance = minUnitDistance
+            return targetObject
+        else
+            return null
+
+
+    getClosestTargetTown: () ->
+        closestTown = null
+        minTownDistance = 10000
+        for town in @world.towns
+            if town.id != @town.id
+                xDistance = Math.abs(@x - town.x)
+                yDistance = Math.abs(@y - town.y)
+                totalDistance = xDistance + yDistance
+                if totalDistance < minTownDistance
+                    minTownDistance = totalDistance
+                    closestTown = town
+
+        if closestTown?
+            targetObject = {}
+            targetObject.target = closestTown
+            targetObject.distance = minTownDistance
+            return targetObject
+        else
+            return null
+
+
     update: () ->
+        @checkAgentsHealth()
         if @active == true
-            @moveTowardsTarget()
+            @healthBar.update()
+            @updateTarget()
+
+            if @target != null
+                @moveTowardsTarget()
+
+
+    checkAgentsHealth: () ->
+        if @health <= 0
+            @cube.position.y += 10
+            @active = false
+            #tell town to remove it
+
+
+    isAtTarget: () ->
+        xd2 = Math.abs(@targetX - @x)
+        yd2 = Math.abs(@targetY - @y)
+
+        if xd2 < 1 && yd2 < 1
+            return true
+        else
+            return false
+
+
+    attackTarget: () ->
+        if(@target instanceof Town)
+            @damage(1) #REMOVE later
+            @target.damageTown(this, 1)
+        else if(@target instanceof Agent)
+            @target.damage(1)
+            @cube.rotation.y += 0.2
+        else
+            @cube.rotation.z += 1
+
+
+    damage: (damageAmount) ->
+        @health -= damageAmount
+        if @health < 0
+            @destroyAgent()
+
+
+    destroyAgent: () ->
+        @active = false
+
 
 
     moveTowardsTarget: () ->
-
-        if @health <= 0
-            @active = false
-            @cube.position.y = -5
-
-
-        xd = Math.abs(@x - @targetX)
-        yd = Math.abs(@y - @targetY)
-        if xd < 2 && yd < 2
-            @health -= 1
-            @targetTown.population -= 1
-            if @targetTown.population < 0
-                @targetTown.population = 0
-                @targetTown.id = @town.id
-                @targetTown.color = @town.color
-                @targetTown.cube.material = @town.cube.material
-                @targetTown.population = 0
-                @targetTown.food = 0
-                @targetTown.gold = 0
-                @active = false
-                @cube.position.y = -5
-
-                for building in @targetTown.buildings
-                    building.cube.material = @town.cube.material
+        if @isAtTarget()
+            @attackTarget()
         else
-            if @x > @targetX
-                @x -= @speed
-            else
-                @x += @speed
+            xDistance = @targetX - @x
+            yDistance = @targetY - @y
 
-            if @y > @targetY
-                @y -= @speed
-            else
-                @y += @speed
+            hyp = Math.sqrt( (xDistance * xDistance) + (yDistance * yDistance))
+            xDistance /= hyp
+            yDistance /= hyp
+
+            @x += xDistance * @speed
+            @y += yDistance * @speed
 
             @cube.position.x = @x * 5
             @cube.position.z = @y * 5

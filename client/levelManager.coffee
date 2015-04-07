@@ -1,10 +1,9 @@
 class LevelManager
 
 
-    @world = null
-
 
     constructor: (scene) ->
+        @world = null
         @scene = scene
         @paused = false
         console.log("Level Manager Module Loaded")

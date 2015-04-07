@@ -8,13 +8,13 @@ class Town
         @color = color
         @population = 10
         @food = 100
-        @gold = 70
+        @gold = 70000
         @farmPrice = 100
         @buildings = []
         @newBuildingCost = 1000
         @unitPoints = 0
 
-        @foodDeclineCounter = 0
+        @technologyFactor = 0
 
         @agents = []
 
@@ -22,9 +22,12 @@ class Town
         @x = x
         @y = y
 
+        @damageCounter = 100
+
         @agentsCount = 0
 
-        @cube = new (THREE.Mesh)(new (THREE.BoxGeometry)(5, 10, 5), new (THREE.MeshLambertMaterial)(color: @color))
+        material = new (THREE.MeshLambertMaterial)(color: @color)
+        @cube = new (THREE.Mesh)(new (THREE.BoxGeometry)(5, 10, 5), material)
         @cube.position.y = 1
         @cube.position.x = x * 5
         @cube.position.z = y * 5
@@ -43,77 +46,62 @@ class Town
         @food += @calculateFood()
         @foodDif = @food - @population - (@agentsCount * 100)
 
+        #Check to see if there is enough food
         if @foodDif < 0
             @population += @foodDif
             if @population < 10
                 @population = 10
-
             @food = 0
 
-            @foodDeclineCounter++
-
-            # if @foodDeclineCounter > 300
             if @lastremoveCounter <= 0
                 @removeWorstBuilding()
                 @lastremoveCounter = 100
             @lastremoveCounter--
 
-            # building = @buildings.pop()
-            # if building?
-            #     building.destroy()
         else
             @food = @food - @population
             @increasePopulation()
-            @foodDeclineCounter--
 
             if @food > @population * 4
                 @food = @population * 4
 
         @population = Math.round(@population)
 
-        # @gold = @gold + @population / 2
 
         if @gold > @farmPrice
             @buyFarm()
 
+        # if @technologyFactor < 1
+        #     @technologyFactor +=  (@population / 10000000)
+        # else if @technologyFactor < 2
+        #     @technologyFactor +=  (@population / 100000000000)
+        # else
+        #     @technologyFactor = 2
+
         @calculateUnitPoints()
 
 
-    getClosestTarget: () ->
-        closestTown = null
-        townDistance = 10000
-        for town in @world.towns
-            if town.id != @id
-                xd = Math.abs(@x - town.x)
-                yd = Math.abs(@y - town.y)
-                cDistance = xd + yd
-                if cDistance < townDistance
-                    townDistance = cDistance
-                    closestTown = town
-
-        if closestTown?
-            return closestTown
-        else
-            return null
 
 
     increasePopulation: () ->
         if @population < @getMaxPopulation()
-            @population += 1
+            @population += 1 + @technologyFactor
         else
             @population = @getMaxPopulation()
-            # @population = (@population * 1.2)
+
 
     getMaxPopulation: () ->
-        bCount = 0
+        buildingCount = 0
         for building in @buildings
             if building.active == true
-                bCount++
+                buildingCount++
 
-        maxPopulation = (bCount * 100)
+        maxPopulation = (buildingCount * 100)
         maxPopulation += 100
         return maxPopulation
 
+
+    #Removes the builing on the best farm land
     removeWorstBuilding:() ->
         maxBuilding
         maxValue = 0
@@ -125,17 +113,15 @@ class Town
 
         if maxBuilding?
             maxBuilding.destroy()
-            # @buildings.remove(maxBuilding)
+            #TODO: destroy buildings
 
 
 
     buyFarm: () ->
-
         bestTile = @findBestFarmTile()
 
-
         if bestTile?
-            farm = new Farm(this,bestTile.x , bestTile.y)
+            farm = new Farm(this, bestTile.x, bestTile.y)
             @farms.push(farm)
             @gold -= @farmPrice
             # @farmPrice = @farmPrice + 200
@@ -144,7 +130,6 @@ class Town
             @expandTown()
 
     expandTown: () ->
-
         if @population >= @getMaxPopulation()
 
             newBuildingTile = @findWorstFarmTile()
@@ -152,14 +137,15 @@ class Town
             if newBuildingTile?
                 newBuilding = new Building(this, @color, newBuildingTile.x, newBuildingTile.y)
                 @buildings.push(newBuilding)
-                @consumeRate += 0.1
                 @expandBorders(newBuildingTile.x, newBuildingTile.y)
-
                 # @degradeFarmTiles(newBuildingTile.x, newBuilding.y)
 
                 for farm in @farms
                     if (farm.x == newBuilding.x) && (farm.y == newBuilding.y)
                         farm.active = false
+                        #TODO:destroy farm complete
+        #else
+            # buy trader?
 
 
 
@@ -173,7 +159,7 @@ class Town
             if workingPopulation > 0
                 if farm.active == true
                     farmValue = farm.value
-                    farmAmount = 100 * farm.value
+                    farmAmount = (100 * ( @technologyFactor + 1) )* farm.value
                     foodAmount += farmAmount
                     workingPopulation -= 10
 
@@ -184,14 +170,36 @@ class Town
         return foodAmount
 
 
-    calculateUnitPoints: () ->
-        # @unitPoints += Math.round(@population / 100)
+    #TODO: check and see if this refactor works
+    damageTown: (attackingAgent, damageAmount) ->
+        @population -= damageAmount
 
+        @damageCounter--
+        if @damageCounter < 0
+            @removeWorstBuilding()
+            @damageCounter = 100
+
+        if @population < 0
+            @population = 0
+            @id = attackingAgent.town.id
+            @color = attackingAgent.town.color
+            @cube.material = attackingAgent.town.cube.material
+            @population = 0
+            @food = 0
+            @gold = 0
+
+            for building in @buildings
+                building.cube.material = attackingAgent.town.cube.material
+
+            for agent in @agents
+                agent.damage(9999999)
+
+    calculateUnitPoints: () ->
         if @gold > @getUnitCost()
             @buyAgent()
 
-    getUnitCost: () ->
 
+    getUnitCost: () ->
         cost = 10000
         cost += cost * @getAgentCount()
         return cost
@@ -199,14 +207,13 @@ class Town
 
     buyAgent: () ->
         @gold -= @getUnitCost()
-        targetTown = @getClosestTarget()
-        if targetTown?
-            agent = @world.agentManager.addAgent(this,targetTown, @x, @y)
-            @agents.push agent
-            @unitPoints -= 1000
-        else #converts gold to food
-            @food += @gold / 2
-            @gold = @gold / 2
+        # if targetTown?
+        agent = @world.agentManager.addAgent(@world, this, @x, @y)
+        @agents.push agent
+        @unitPoints -= 1000
+        # else #converts gold to food
+        #     @food += @gold / 2
+        #     @gold = @gold / 2
 
 
     getAgentCount: () ->
@@ -267,8 +274,8 @@ class Town
 
 
     isBestTile: (bestTile, x,y) ->
+        currentTile = @world.getTile(x,y)
         if bestTile?
-            currentTile = @world.getTile(x,y)
             if @isFarmTileAvalaible(currentTile) == true
                 if currentTile.value > bestTile.value
                     return currentTile
@@ -277,7 +284,6 @@ class Town
             else
                 return bestTile
         else
-            currentTile = @world.getTile(x,y)
             if @isFarmTileAvalaible(currentTile)
                 return currentTile
             else
@@ -295,16 +301,12 @@ class Town
     buildingTileValue: (theTile) ->
         value = theTile.value
         # distance = @distanceToTown(theTile.x, theTile.y)
-
         # buildingValue = value * (distance *2)
-
         return value
 
     findWorstFarmTile: () ->
 
         maxTile = null
-
-        #check up
 
         maxTile = @isWorstTile(maxTile, @x, @y - 1) #up
         maxTile = @isWorstTile(maxTile, @x - 1, @y - 1) #up left
@@ -314,7 +316,6 @@ class Town
         maxTile = @isWorstTile(maxTile, @x , @y + 1 )#down
         maxTile = @isWorstTile(maxTile, @x - 1, @y + 1 )#down left
         maxTile = @isWorstTile(maxTile, @x + 1, @y + 1 )#down right
-
 
         for farm in @farms
             maxTile = @isWorstTile(maxTile, farm.x, farm.y - 1) #up
@@ -348,9 +349,10 @@ class Town
 
     isFarmTileAvalaible: (theTile) ->
         if theTile?
-            if theTile.hasFarm == false && theTile.hasBuilding == false && theTile.isLand && @isOwner(theTile) == true
-                if @hasOtherBorder(theTile.x, theTile.y) == false
-                    return true
+            if @isOwner(theTile) == true
+                if theTile.isLand && theTile.hasFarm == false && theTile.hasBuilding == false
+                    if @hasOtherBorder(theTile.x, theTile.y) == false
+                        return true
         return false
 
 

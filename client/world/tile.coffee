@@ -15,19 +15,27 @@ class Tile
         @hasOwner = false
         @owner = null
 
+        TILE_WIDTH = 5
+        TILE_HEIGHT = 5
+
         if type == 1
             @isLand = true
-            cube = new (THREE.Mesh)(new (THREE.BoxGeometry)(5, 1, 5), new (THREE.MeshLambertMaterial)(color: tileColor))
+            landMaterial = new (THREE.MeshLambertMaterial)(color: tileColor)
+            cube = new (THREE.Mesh)(new (THREE.BoxGeometry)(TILE_WIDTH, 1, TILE_HEIGHT), landMaterial)
         else if type == 2
             @isLand = false
             isWater = true
-            cube = new (THREE.Mesh)(new (THREE.BoxGeometry)(5, 1, 5), new (THREE.MeshLambertMaterial)(color: 0x19B5FE))
-
+            waterMaterial = new (THREE.MeshLambertMaterial)(color: 0x19B5FE)
+            cube = new (THREE.Mesh)(new (THREE.BoxGeometry)(TILE_WIDTH, 1, TILE_HEIGHT), waterMaterial)
         else if type == 3
             @isLand = false
             isWater = true
             height = Math.random() * (15 - 5) + 5
-            cube = new THREE.Mesh(new THREE.CylinderGeometry(0, 7, height, 10, 10, false), new (THREE.MeshLambertMaterial)(color: 0x95a5a6))
+            mountainMaterial = new (THREE.MeshLambertMaterial)(color: 0x95a5a6)
+            cube = new THREE.Mesh(new THREE.CylinderGeometry(0, 7, height, 10, 10, false), mountainMaterial)
+        #TODO: add coastal type
+        #TODO: add trees
+
 
         cube.position.y = 1
         cube.position.x = x * 5
