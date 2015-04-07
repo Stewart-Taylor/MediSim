@@ -23,4 +23,7 @@ class HealthBar
 
 
         @cube.scale.x = percent
+
+        if @agent.active == false
+            @cube.position.y = 99
         #update the health bar to

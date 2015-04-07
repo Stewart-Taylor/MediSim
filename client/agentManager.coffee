@@ -10,8 +10,8 @@ class AgentManager
             agent.update()
 
 
-    addAgent: (town,targetTown, x,y) ->
-        agent = new Agent(town,targetTown, x,y)
+    addAgent: (town,targetTown, x,y, isGuard) ->
+        agent = new Agent(town,targetTown, x,y, isGuard)
         @agents.push agent
         return agent
 

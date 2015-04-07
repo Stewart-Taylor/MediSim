@@ -1,7 +1,7 @@
 
 class Agent
 
-    constructor: (world, town, x,y) ->
+    constructor: (world, town, x,y, isGuard) ->
         @x = x
         @y = y
 
@@ -30,6 +30,11 @@ class Agent
         @strength = 1
 
         @active = true
+
+        @isGuard = isGuard
+
+        @homeGuardX = @x + (Math.floor(Math.random() * 2) + 1) - (Math.floor(Math.random() * 2) + 1)
+        @homeGuardY = @y + (Math.floor(Math.random() * 2) + 1) - (Math.floor(Math.random() * 2) + 1)
 
 
     updateTarget: () ->
@@ -79,6 +84,28 @@ class Agent
             return null
 
 
+    seekTarget: () ->
+        closeUnitTarget = null
+        minUnitDistance = 100000
+        for tempAgent in @world.agentManager.agents
+            if tempAgent.active == true
+                if @town.id != tempAgent.town.id
+                    xDistance = Math.abs(@x - tempAgent.x)
+                    yDistance = Math.abs(@y - tempAgent.y)
+                    totalDistance = xDistance + yDistance
+                    if totalDistance < minUnitDistance
+                        minUnitDistance = totalDistance
+                        closeUnitTarget = tempAgent
+
+        if closeUnitTarget?
+            if minUnitDistance < 5
+                return closeUnitTarget
+            else
+                return null
+        else
+            return null
+
+
     getClosestTargetTown: () ->
         closestTown = null
         minTownDistance = 10000
@@ -104,10 +131,34 @@ class Agent
         @checkAgentsHealth()
         if @active == true
             @healthBar.update()
-            @updateTarget()
+
+            if @isGuard == false
+                @updateTarget()
+            else
+                @target = @seekTarget()
+                if @target != null
+                    @targetX = @target.x
+                    @targetY = @target.y
 
             if @target != null
                 @moveTowardsTarget()
+            else
+                if @isGuard
+                    @moveToBase()
+
+    moveToBase: () ->
+        xDistance = @homeGuardX - @x
+        yDistance = @homeGuardY - @y
+
+        hyp = Math.sqrt( (xDistance * xDistance) + (yDistance * yDistance))
+        xDistance /= hyp
+        yDistance /= hyp
+
+        @x += xDistance * @speed
+        @y += yDistance * @speed
+
+        @cube.position.x = @x * 5
+        @cube.position.z = @y * 5
 
 
     checkAgentsHealth: () ->

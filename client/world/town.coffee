@@ -8,7 +8,7 @@ class Town
         @color = color
         @population = 10
         @food = 100
-        @gold = 70000
+        @gold = 70
         @farmPrice = 100
         @buildings = []
         @newBuildingCost = 1000
@@ -17,6 +17,8 @@ class Town
         @technologyFactor = 0
 
         @agents = []
+
+        @aggressiveness = Math.random()
 
         @farms = []
         @x = x
@@ -201,14 +203,20 @@ class Town
 
     getUnitCost: () ->
         cost = 10000
-        cost += cost * @getAgentCount()
+        # cost += cost * @getAgentCount()
         return cost
 
 
     buyAgent: () ->
         @gold -= @getUnitCost()
         # if targetTown?
-        agent = @world.agentManager.addAgent(@world, this, @x, @y)
+
+        rValue =  Math.random()
+        if rValue > @aggressiveness
+            agent = @world.agentManager.addAgent(@world, this, @x, @y, true)
+        else
+            agent = @world.agentManager.addAgent(@world, this, @x, @y, false)
+
         @agents.push agent
         @unitPoints -= 1000
         # else #converts gold to food
