@@ -1,14 +1,13 @@
 
 class Agent
 
-    constructor: (world, town, x,y, isGuard) ->
+    constructor: (world, town, x, y, isGuard) ->
         @x = x
         @y = y
 
         @town = town
 
         @healthBar = new HealthBar(this)
-        # @targetTown = targetTown
 
         material = new (THREE.MeshLambertMaterial)(color: @town.color)
         @cube = new (THREE.Mesh)(new (THREE.BoxGeometry)(1, 3, 1), material)
@@ -21,8 +20,6 @@ class Agent
 
         @world = world
         @target = null
-        # @targetX = @targetTown.x
-        # @targetY = @targetTown.y
 
         @speed = 0.01
         @health = 1000
@@ -132,13 +129,14 @@ class Agent
         if @active == true
             @healthBar.update()
 
-            if @isGuard == false
-                @updateTarget()
-            else
-                @target = @seekTarget()
-                if @target != null
-                    @targetX = @target.x
-                    @targetY = @target.y
+            if @target != null
+                if @isGuard == false
+                    @updateTarget()
+                else
+                    @target = @seekTarget()
+                    if @target != null
+                        @targetX = @target.x
+                        @targetY = @target.y
 
             if @target != null
                 @moveTowardsTarget()
@@ -147,18 +145,7 @@ class Agent
                     @moveToBase()
 
     moveToBase: () ->
-        xDistance = @homeGuardX - @x
-        yDistance = @homeGuardY - @y
-
-        hyp = Math.sqrt( (xDistance * xDistance) + (yDistance * yDistance))
-        xDistance /= hyp
-        yDistance /= hyp
-
-        @x += xDistance * @speed
-        @y += yDistance * @speed
-
-        @cube.position.x = @x * 5
-        @cube.position.z = @y * 5
+        moveToCoordinates(@homeGuardX, @homeGuardY)
 
 
     checkAgentsHealth: () ->
@@ -180,11 +167,17 @@ class Agent
 
     attackTarget: () ->
         if(@target instanceof Town)
-            @damage(1) #REMOVE later
-            @target.damageTown(this, 1)
+            if @target != @town.id
+                @damage(1) #REMOVE later
+                @target.damageTown(this, 1)
+            else
+                @target = null
         else if(@target instanceof Agent)
-            @target.damage(1)
-            @cube.rotation.y += 0.2
+            if @target.active == true
+                @target.damage(1)
+                @cube.rotation.y += 0.2
+            else
+                @target = null
         else
             @cube.rotation.z += 1
 
@@ -197,15 +190,21 @@ class Agent
 
     destroyAgent: () ->
         @active = false
-
+        healthBar.destroy()
+        @town.removeAgent(this)
+        @town.world.scene.remove @cube
 
 
     moveTowardsTarget: () ->
         if @isAtTarget()
             @attackTarget()
         else
-            xDistance = @targetX - @x
-            yDistance = @targetY - @y
+            moveToCoordinates(@targetX, @targetY)
+
+
+    moveToCoordinates: (xCoord, yCoord) ->
+            xDistance = xCoord - @x
+            yDistance = yCoord - @y
 
             hyp = Math.sqrt( (xDistance * xDistance) + (yDistance * yDistance))
             xDistance /= hyp
