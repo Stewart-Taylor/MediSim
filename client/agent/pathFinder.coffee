@@ -3,6 +3,8 @@ class PathFinder
 
     constructor: (width, height, map) ->
 
+        @width = width
+        @height = height
         @grid = @createArray(width, height)
 
         for mapTile in map
@@ -11,7 +13,7 @@ class PathFinder
             gridTile.y = mapTile.y
             gridTile.f = 0
             gridTile.g = 0
-            gridTileh = 0
+            gridTile.h = 0
             gridTile.debug = ""
             if mapTile.isLand == true
                 gridTile.isWall = false
@@ -19,7 +21,6 @@ class PathFinder
                 gridTile.isWall = true
 
             @grid[gridTile.x][gridTile.y] = gridTile
-
 
 
     createArray: (length) ->
@@ -140,9 +141,12 @@ class PathFinder
 
     heuristic: (pos1, pos2) ->
         # This is the Manhattan distance
-        distanceX = Math.abs (pos1.x - pos2.x)
-        distanceY = Math.abs (pos1.y - pos2.y)
-        return distanceX + distanceY
+
+        return dist = Math.sqrt( Math.pow((pos1.x - pos2.x), 2) + Math.pow((pos1.y - pos2.y), 2) )
+
+        # distanceX = Math.abs (pos1.x - pos2.x)
+        # distanceY = Math.abs (pos1.y - pos2.y)
+        # return distanceX + distanceY
 
 
     neighbors: (grid, node) ->
@@ -150,19 +154,73 @@ class PathFinder
         x = node.x
         y = node.y
 
-        if(grid[x-1] && grid[x-1][y])
-            ret.push(grid[x-1][y])
 
-        if(grid[x+1] && grid[x+1][y])
-            ret.push(grid[x+1][y])
+        item = @addTile(x - 1, y - 1)
+        if item?
+            ret.push item
 
-        if(grid[x][y-1] && grid[x][y-1])
-            ret.push(grid[x][y-1])
+        item = @addTile(x , y - 1)
+        if item?
+            ret.push item
 
-        if(grid[x][y+1] && grid[x][y+1])
-            ret.push(grid[x][y+1])
+        item = @addTile(x + 1, y - 1)
+        if item?
+            ret.push item
+
+        item = @addTile(x - 1, y)
+        if item?
+            ret.push item
+
+
+        item = @addTile(x + 1, y)
+        if item?
+            ret.push item
+
+        item = @addTile(x - 1, y + 1)
+        if item?
+            ret.push item
+
+        item = @addTile(x , y + 1)
+        if item?
+            ret.push item
+
+        item = @addTile(x + 1, y + 1)
+        if item?
+            ret.push item
+
+
+        # if x > 1
+        #     if(grid[x - 1][y] && grid[ x - 1][y])
+        #         ret.push(grid[x - 1][y])
+
+        #     if(grid[x - 1][y] && grid[ x - 1][y - 1])
+        #         ret.push(grid[x - 1][y - 1])
+
+        # if x < @width - 1
+        #     if(grid[x + 1][y] && grid[x + 1][y])
+        #         ret.push(grid[x + 1][y])
+
+        #     if(grid[x + 1][y] && grid[x + 1][y + 1])
+        #         ret.push(grid[x + 1][y + 1])
+
+        # if y > 1
+        #     if(grid[x][y - 1] && grid[x][y - 1])
+        #         ret.push(grid[x][y - 1])
+
+        # if y < @height - 1
+        #     if(grid[x][y + 1] && grid[x][y + 1])
+        #         ret.push(grid[x][y + 1])
 
         return ret
+
+
+    addTile: (x, y) ->
+        console.log(x + "," + y)
+        tTile = @grid[Math.round(x)][Math.round(y)]
+        if tTile?
+            return tTile
+        else
+            return null
 
 
 
@@ -217,8 +275,8 @@ class PathFinderTester
 
 
         isPath =  (paths, x,y) ->
-            for path in paths
-                if (path.x == x) && (path.y == y)
+            for pathT in paths
+                if (pathT.x == x) && (pathT.y == y)
                     return true
             return false
 
@@ -262,15 +320,39 @@ class PathFinderTester
             console.log()
             console.log()
 
+        printPathGrid = (path) ->
+            console.log("Generated")
+            console.log()
+            y = 0
+            while y < WORLD_HEIGHT
+                lineString = ""
+                x = 0
+                while x < WORLD_WIDTH
+                    temp = getTile(x,y)
+                    if  temp.isLand
+                        if  isPath(path, x, y)
+                            lineString += "o"
+                        else
+                            lineString += "."
+                    else
+                        lineString += "#"
+                    # lineString += (Math.round( gen.getTile(x,y).value * 10 )) + "|"
+                    x++
+                console.log(lineString)
+                y++
+            console.log()
+            console.log()
+
 
 
         printGrid()
         printPath(path)
+        printPathGrid(path)
 
 
 
 
-tester = new PathFinderTester(PathFinder)
+# tester = new PathFinderTester(PathFinder)
 
 
 

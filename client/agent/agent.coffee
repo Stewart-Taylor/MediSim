@@ -1,11 +1,14 @@
 
 class Agent
 
-    constructor: (world, town, x, y, isGuard) ->
+    constructor: (pathfinder, world, town, x, y, isGuard) ->
         @x = x
         @y = y
 
         @town = town
+        @pathfinder = pathfinder
+
+        @path = []
 
         @healthBar = new HealthBar(this)
 
@@ -129,7 +132,7 @@ class Agent
         if @active == true
             @healthBar.update()
 
-            if @target != null
+            if @target == null
                 if @isGuard == false
                     @updateTarget()
                 else
@@ -145,7 +148,7 @@ class Agent
                     @moveToBase()
 
     moveToBase: () ->
-        moveToCoordinates(@homeGuardX, @homeGuardY)
+        @moveToCoordinates(@homeGuardX, @homeGuardY)
 
 
     checkAgentsHealth: () ->
@@ -190,28 +193,66 @@ class Agent
 
     destroyAgent: () ->
         @active = false
-        healthBar.destroy()
-        @town.removeAgent(this)
-        @town.world.scene.remove @cube
+        @healthBar.destroy()
+        # @town.removeAgent(this)
+        # @town.world.scene.remove @cube
 
 
     moveTowardsTarget: () ->
         if @isAtTarget()
             @attackTarget()
         else
-            moveToCoordinates(@targetX, @targetY)
+            @moveToCoordinates(@targetX, @targetY)
+            #  @moveOnPath()
+
+
+    moveOnPath: () ->
+        if @path.length == 0
+            #generate path
+            start = {}
+            start.x = @x
+            start.y = @y
+            end = {}
+            end.x = @targetX
+            end.y = @targetY
+            @path = @pathfinder.findPath(start, end)
+
+
+            # for pathPoint in @path
+            #     material = new (THREE.MeshLambertMaterial)(color: @town.color)
+            #     cube = new (THREE.Mesh)(new (THREE.BoxGeometry)(0.3, 5, 0.3), material)
+            #     cube.position.y = 3
+            #     cube.position.x = pathPoint.x * 5
+            #     cube.position.z = pathPoint.y * 5
+            #     cube.castShadow = false
+            #     cube.receiveShadow = false
+            #     @town.world.scene.add cube
+
+
+        else
+            #at path point?
+            pathLast = @path[0]
+
+            xDistance = pathLast.x - @x
+            yDistance = pathLast.y - @y
+            totalDistance = xDistance + yDistance
+
+            if  totalDistance < 1
+                @path.splice(0, 1)
+            else
+                @moveToCoordinates(pathLast.x, pathLast.y)
 
 
     moveToCoordinates: (xCoord, yCoord) ->
-            xDistance = xCoord - @x
-            yDistance = yCoord - @y
+        xDistance = xCoord - @x
+        yDistance = yCoord - @y
 
-            hyp = Math.sqrt( (xDistance * xDistance) + (yDistance * yDistance))
-            xDistance /= hyp
-            yDistance /= hyp
+        hyp = Math.sqrt( (xDistance * xDistance) + (yDistance * yDistance))
+        xDistance /= hyp
+        yDistance /= hyp
 
-            @x += xDistance * @speed
-            @y += yDistance * @speed
+        @x += xDistance * @speed
+        @y += yDistance * @speed
 
-            @cube.position.x = @x * 5
-            @cube.position.z = @y * 5
+        @cube.position.x = @x * 5
+        @cube.position.z = @y * 5

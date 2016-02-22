@@ -36,9 +36,9 @@ class WorldGenerator
         @createWaterEdges()
         @coastErode()
         @addMountains()
+        @generateYield()
         @addLakes()
         @addTrees()
-        @generateYield()
         @convertLakeToWater() #REMOVE later
         @time_taken = Date.now() - timestart
 
@@ -54,7 +54,7 @@ class WorldGenerator
 
     addLakes: () ->
         mountainTiles = []
-        mountainPlaces = 7
+        mountainPlaces = 2
 
         while mountainPlaces > 0
             rX = Math.floor(Math.random() * WORLD_WIDTH) + 1
@@ -67,7 +67,7 @@ class WorldGenerator
                     mountainTiles. push tile
                     mountainPlaces--
 
-        passes = Math.floor(Math.random() * TREE_PASSES) + 3
+        passes = Math.floor(Math.random() * TREE_PASSES) + 8
         while passes > 0
             @lakePass()
             @mpass_value -= 0.1
@@ -339,6 +339,6 @@ class WorldGenerator
             return TREE_TILE_CHAR
 
 
-gen = new WorldGenerator()
-gen.generateWorld()
-gen.printMapToConsole()
+# gen = new WorldGenerator()
+# gen.generateWorld()
+# gen.printMapToConsole()

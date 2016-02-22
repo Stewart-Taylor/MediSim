@@ -194,7 +194,8 @@ class Town
                 building.cube.material = attackingAgent.town.cube.material
 
             for agent in @agents
-                agent.damage(9999999)
+                if agent?
+                    agent.damage(9999999)
 
     calculateUnitPoints: () ->
         if @gold > @getUnitCost()
@@ -213,7 +214,7 @@ class Town
 
         rValue =  Math.random()
         if rValue > @aggressiveness
-            agent = @world.agentManager.addAgent(@world, this, @x, @y, true)
+            agent = @world.agentManager.addAgent(@world, this, @x, @y, false)
         else
             agent = @world.agentManager.addAgent(@world, this, @x, @y, false)
 

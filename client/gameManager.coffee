@@ -71,7 +71,7 @@ class GameManager
         # console.log(levelManager)
 
         i = 0
-        while i < 8
+        while i < levelManager.world.towns.length
             color = levelManager.world.towns[i].color
 
             $('#town_' + (i + 1) + "_color").css( "background", "#" + color.toString(16) );

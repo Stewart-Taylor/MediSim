@@ -33,6 +33,10 @@ class Tile
             height = Math.random() * (15 - 5) + 5
             mountainMaterial = new (THREE.MeshLambertMaterial)(color: 0x95a5a6)
             cube = new THREE.Mesh(new THREE.CylinderGeometry(0, 7, height, 10, 10, false), mountainMaterial)
+        else if type == 4
+            @isLand = true
+            landMaterial = new (THREE.MeshLambertMaterial)(color: tileColor)
+            cube = new (THREE.Mesh)(new (THREE.BoxGeometry)(TILE_WIDTH, 1, TILE_HEIGHT), landMaterial)
         #TODO: add coastal type
         #TODO: add trees
 

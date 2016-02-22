@@ -20,16 +20,17 @@ class World
         @scene = scene
         @towns = []
         @tiles = []
-        @agentManager = new AgentManager(this)
+        @tilesPF = []
         worldGenerator = new WorldGenerator()
 
         @WORLD_WIDTH = worldGenerator.WORLD_WIDTH
         @WORLD_HEIGHT = worldGenerator.WORLD_HEIGHT
 
+
         @createWorld(worldGenerator)
+        @agentManager = new AgentManager(scene, this)
         @placeTowns(worldGenerator)
 
-        @landTiles = []
 
 
     createWorld: (worldGenerator) ->
@@ -39,8 +40,9 @@ class World
         for gridTile in grid
             newTile = new Tile(this, gridTile.x, gridTile.y, gridTile.value, gridTile.type)
             @tiles[gridTile.x][gridTile.y] = newTile
-            if newTile.isLand == true
-                @landTiles.push newTile
+            @tilesPF.push newTile
+            # if newTile.isLand == true
+            #     @landTiles.push newTile
 
 
     createArray: (length) ->
@@ -62,11 +64,50 @@ class World
             y = Math.floor((Math.random() * @WORLD_HEIGHT - 1) + 1)
 
             townTile = @getTile(x, y)
-            if townTile?
-                if townTile.isLand
-                    town = new Town(this, placeCount + 1, TOWN_COLORS[placeCount], x, y)
-                    @towns.push(town)
-                    placeCount++
+            if @canPlaceTown(townTile)
+                town = new Town(this, placeCount + 1, TOWN_COLORS[placeCount], x, y)
+                @towns.push(town)
+                placeCount++
+
+    canPlaceTown: (townTile) ->
+        if townTile?
+            if townTile.isLand
+
+                invalidCount = 0
+                if @isAdjacentTileLand(townTile.x - 1, townTile.y - 1) == false
+                    invalidCount++
+                if @isAdjacentTileLand(townTile.x , townTile.y - 1) == false
+                    invalidCount++
+                if @isAdjacentTileLand(townTile.x + 1, townTile.y - 1) == false
+                    invalidCount++
+                if @isAdjacentTileLand(townTile.x - 1, townTile.y ) == false
+                    invalidCount++
+                if @isAdjacentTileLand(townTile.x + 1, townTile.y ) == false
+                    invalidCount++
+                if @isAdjacentTileLand(townTile.x - 1, townTile.y + 1) == false
+                    invalidCount++
+                if @isAdjacentTileLand(townTile.x , townTile.y + 1) == false
+                    invalidCount++
+                if @isAdjacentTileLand(townTile.x + 1, townTile.y + 1) == false
+                    invalidCount++
+
+                if invalidCount == 0
+                    for town in @towns
+                        xDistance = Math.abs(townTile.x - town.x)
+                        yDistance = Math.abs(townTile.y - town.y)
+
+                        if ( xDistance + yDistance) < 8
+                            return false
+                    return true
+        return false
+
+    isAdjacentTileLand: (x, y) ->
+        tile = @getTile(x,y)
+        if tile?
+            if tile.isLand
+                return true
+        return false
+
 
 
     update: () ->
