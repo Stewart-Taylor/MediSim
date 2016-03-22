@@ -8,6 +8,15 @@ To watch the action - http://stewart-taylor.github.io/MediSim/
 
 MediSim is a simulation of a little collection of civilizations that co exist on an island. The idea of this little experiment is that you don't interact with it you just watch and see how the mechanics of the simulation take over allowing the island and civilizations to organically evolve.
 
+## Keys
+	W - Move Up
+	A - Move Left
+	S - Move Down
+	D - Move Right
+	Q - Raise Camera
+	E - Lower Camera
+	Z - Tilt Camera Up
+	C - Tilt Camera Down
 
 # Simulation Details
 This section will explain a bit more of what is going on for those that are curious. There is a lot of factors and rules which the civilizations adopt to which allows them to expand.
