@@ -21,7 +21,7 @@ MediSim is a simulation of a little collection of civilizations that co exist on
 # Simulation Details
 This section will explain a bit more of what is going on for those that are curious. There is a lot of factors and rules which the civilizations adopt to which allows them to expand.
 
-## The island
+## The land of the island
 
 ![View of the land](http://i.imgur.com/ibjJhZq.png)
 
