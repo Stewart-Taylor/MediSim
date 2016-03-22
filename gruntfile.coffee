@@ -31,6 +31,10 @@ module.exports = (grunt) ->
         todo:
             src: ['client/**/*.coffee']
 
+        'http-server':
+            port:8080
+            root: 'static'
+
 
 
     grunt.loadNpmTasks 'grunt-contrib-watch'
@@ -38,6 +42,7 @@ module.exports = (grunt) ->
     grunt.loadNpmTasks 'grunt-coffeelint'
     grunt.loadNpmTasks 'grunt-contrib-clean'
     grunt.loadNpmTasks 'grunt-todo'
+    grunt.loadNpmTasks 'grunt-http-server'
 
 
 

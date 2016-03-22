@@ -62,10 +62,6 @@ class GameManager
         levelManager.update()
         timeTaken = Date.now() - timestart
 
-        # console.log(timeD , "ms")
-
-
-
 
     htmlupdate = () ->
         # console.log(levelManager)

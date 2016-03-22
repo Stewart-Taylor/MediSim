@@ -1,8 +1,6 @@
 class LightManager
 
     constructor: (scene) ->
-        console.log("Light Manager Module Loaded")
-
         x = 90
         y = 500
         z = 20
