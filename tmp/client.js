@@ -1,5 +1,5 @@
 (function() {
-  var Agent, AgentManager, Building, CameraManager, Civ, ControlManager, Farm, GameManager, HealthBar, LevelManager, LightManager, PathFinder, PathFinderTester, TOWN_COLORS, TOWN_COUNT, Tile, Town, World, WorldGenerator, gameManager;
+  var Agent, AgentManager, Building, CameraManager, ControlManager, Farm, GameManager, HealthBar, LevelManager, LightManager, PathFinder, PathFinderTester, TOWN_COLORS, TOWN_COUNT, Tile, Town, World, WorldGenerator, gameManager;
 
   Agent = (function() {
     function Agent(pathfinder, world, town, x, y, isGuard) {
@@ -642,7 +642,6 @@
   CameraManager = (function() {
     function CameraManager(scene) {
       var aspect, far, fov, near;
-      console.log("Camera Module Loaded");
       fov = 60;
       aspect = window.innerWidth / window.innerHeight;
       near = 1;
@@ -661,25 +660,15 @@
 
   })();
 
-  Civ = (function() {
-    function Civ() {}
-
-    return Civ;
-
-  })();
-
   ControlManager = (function() {
     function ControlManager(scene, cameraManager, levelManager) {
       this.scene = scene;
       this.gameManager = gameManager;
       this.cameraManager = cameraManager;
       this.levelManager = levelManager;
-      console.log("ControlManager Module Loaded");
-      console.log(this.cameraManager);
       $(function() {
         return $('body').on('keydown', function(event) {
           console.log(event.type + ': ' + event.which);
-          console.log(gameManager.cameraManager);
           if (event.which === 87) {
             cameraManager.camera.position.z -= 1.6;
           }
@@ -812,7 +801,6 @@
       this.world = null;
       this.scene = scene;
       this.paused = false;
-      console.log("Level Manager Module Loaded");
     }
 
     LevelManager.prototype.init = function() {
@@ -832,7 +820,6 @@
   LightManager = (function() {
     function LightManager(scene) {
       var x, y, z;
-      console.log("Light Manager Module Loaded");
       x = 90;
       y = 500;
       z = 20;
