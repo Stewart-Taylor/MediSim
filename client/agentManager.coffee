@@ -10,13 +10,7 @@ class AgentManager
             agent.update()
 
 
-    removeAgent: (removeAgent) ->
-        removeAgentIndex = @agents.indexOf(removeAgent)
-        @agents.splice(removeAgentIndex, 1)
-
-
     addAgent: (town,targetTown, x,y, isGuard) ->
         agent = new Agent(town,targetTown, x,y, isGuard)
         @agents.push agent
         return agent
-

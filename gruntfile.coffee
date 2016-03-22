@@ -22,7 +22,7 @@ module.exports = (grunt) ->
                 options:
                     join: true
                 files:
-                    'tmp/client.js': ['client/**/*.coffee']
+                    'static/tmp/client.js': ['client/**/*.coffee']
 
         clean:
             tmp:

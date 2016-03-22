@@ -3,6 +3,8 @@
 class CameraManager
 
     constructor: (scene) ->
+        console.log("Camera Module Loaded")
+
         fov = 60
         aspect = window.innerWidth / window.innerHeight
         near = 1

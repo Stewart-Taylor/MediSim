@@ -29,8 +29,6 @@ class World
         @createWorld(worldGenerator)
         @placeTowns(worldGenerator)
 
-        @landTiles = []
-
 
     createWorld: (worldGenerator) ->
         grid = worldGenerator.generateWorld()
@@ -39,8 +37,6 @@ class World
         for gridTile in grid
             newTile = new Tile(this, gridTile.x, gridTile.y, gridTile.value, gridTile.type)
             @tiles[gridTile.x][gridTile.y] = newTile
-            if newTile.isLand == true
-                @landTiles.push newTile
 
 
     createArray: (length) ->
@@ -81,4 +77,3 @@ class World
             if ( y > 0 ) && ( y < @WORLD_HEIGHT)
                 return @tiles[x][y]
         return null
-
