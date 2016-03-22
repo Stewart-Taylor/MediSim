@@ -194,8 +194,7 @@ class Town
                 building.cube.material = attackingAgent.town.cube.material
 
             for agent in @agents
-                if agent?
-                    agent.damage(9999999)
+                agent.damage(9999999)
 
     calculateUnitPoints: () ->
         if @gold > @getUnitCost()
@@ -214,7 +213,7 @@ class Town
 
         rValue =  Math.random()
         if rValue > @aggressiveness
-            agent = @world.agentManager.addAgent(@world, this, @x, @y, false)
+            agent = @world.agentManager.addAgent(@world, this, @x, @y, true)
         else
             agent = @world.agentManager.addAgent(@world, this, @x, @y, false)
 
@@ -427,13 +426,6 @@ class Town
         @claimTile(x + 1, y + 1)
 
 
-    removeAgent: (removeAgent) ->
-        removeAgentIndex = @agents.indexOf(removeAgent)
-        @agents.splice(removeAgentIndex, 1)
-        @world.agentManager.removeAgent(removeAgent)
-
-
-
     claimTile: (x,y) ->
         claimTile = @world.getTile(x,y)
         if claimTile?
@@ -452,6 +444,5 @@ class Town
                     # @cube.castShadow = false
                     # @cube.receiveShadow = false
                     # @world.scene.add @cube
-
 
 

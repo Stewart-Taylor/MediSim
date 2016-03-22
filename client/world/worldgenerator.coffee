@@ -5,7 +5,6 @@ class WorldGenerator
     WORLD_HEIGHT = 30
     COAST_ERODE_PASSES = 5
     MOUNTAIN_PASSES = 7
-    TREE_PASSES = 7
 
     LAND_TILE = 1
     LAND_TILE_CHAR = "#"
@@ -16,11 +15,6 @@ class WorldGenerator
     MOUNTAIN_TILE = 3
     MOUNTAIN_TILE_CHAR = "^"
 
-    TREE_TILE = 4
-    TREE_TILE_CHAR = "|"
-
-    LAKE_TILE = 5
-    LAKE_TILE_CHAR = "."
 
 
     constructor: () ->
@@ -37,108 +31,9 @@ class WorldGenerator
         @coastErode()
         @addMountains()
         @generateYield()
-        @addLakes()
-        @addTrees()
-        @convertLakeToWater() #REMOVE later
         @time_taken = Date.now() - timestart
 
         return @map
-
-
-    #Remove and turn into lake at later point
-    convertLakeToWater: () ->
-        for tile in @map
-            if tile.type == LAKE_TILE
-                tile.type = WATER_TILE
-
-
-    addLakes: () ->
-        mountainTiles = []
-        mountainPlaces = 2
-
-        while mountainPlaces > 0
-            rX = Math.floor(Math.random() * WORLD_WIDTH) + 1
-            rY = Math.floor(Math.random() * WORLD_HEIGHT) + 1
-
-            tile = @getTile(rX, rY)
-            if tile?
-                if tile.type == LAND_TILE
-                    tile.type = LAKE_TILE
-                    mountainTiles. push tile
-                    mountainPlaces--
-
-        passes = Math.floor(Math.random() * TREE_PASSES) + 8
-        while passes > 0
-            @lakePass()
-            @mpass_value -= 0.1
-            if mpass_value < 0.1
-                mpass_value = 0.1
-            passes--
-
-
-    lakePass: () ->
-        mountainTiles = []
-        for tile in @map
-            if tile.type == LAKE_TILE
-                mountainTiles.push tile
-
-        for mountainTile in mountainTiles
-            @convertLakeTile(mountainTile.x, mountainTile.y - 1)
-            @convertLakeTile(mountainTile.x + 1, mountainTile.y)
-            @convertLakeTile(mountainTile.x - 1, mountainTile.y)
-            @convertLakeTile(mountainTile.x, mountainTile.y + 1)
-
-    convertLakeTile: (x, y) ->
-        tile = @getTile(x,y)
-        if tile?
-            rValue = Math.random()
-            if rValue < 0.5
-                if tile.type == LAND_TILE
-                    tile.type = LAKE_TILE
-
-    addTrees: () ->
-        mountainTiles = []
-        mountainPlaces = 7
-
-        while mountainPlaces > 0
-            rX = Math.floor(Math.random() * WORLD_WIDTH) + 1
-            rY = Math.floor(Math.random() * WORLD_HEIGHT) + 1
-
-            tile = @getTile(rX, rY)
-            if tile?
-                if tile.type == LAND_TILE
-                    tile.type = TREE_TILE
-                    mountainTiles. push tile
-                    mountainPlaces--
-
-        passes = Math.floor(Math.random() * TREE_PASSES) + 3
-        while passes > 0
-            @treePass()
-            @mpass_value -= 0.1
-            if mpass_value < 0.1
-                mpass_value = 0.1
-            passes--
-
-
-    treePass: () ->
-        mountainTiles = []
-        for tile in @map
-            if tile.type == TREE_TILE
-                mountainTiles.push tile
-
-        for mountainTile in mountainTiles
-            @convertTreeTile(mountainTile.x, mountainTile.y - 1)
-            @convertTreeTile(mountainTile.x + 1, mountainTile.y)
-            @convertTreeTile(mountainTile.x - 1, mountainTile.y)
-            @convertTreeTile(mountainTile.x, mountainTile.y + 1)
-
-    convertTreeTile: (x, y) ->
-        tile = @getTile(x,y)
-        if tile?
-            rValue = Math.random()
-            if rValue < 0.5
-                if tile.type == LAND_TILE
-                    tile.type = TREE_TILE
 
 
     generateYield: () ->
@@ -335,10 +230,3 @@ class WorldGenerator
             return WATER_TILE_CHAR
         else if type == MOUNTAIN_TILE
             return MOUNTAIN_TILE_CHAR
-        else if type == TREE_TILE
-            return TREE_TILE_CHAR
-
-
-# gen = new WorldGenerator()
-# gen.generateWorld()
-# gen.printMapToConsole()

@@ -1,16 +1,14 @@
 
 class Agent
 
-    constructor: (pathfinder, world, town, x, y, isGuard) ->
+    constructor: (world, town, x,y, isGuard) ->
         @x = x
         @y = y
 
         @town = town
-        @pathfinder = pathfinder
-
-        @path = []
 
         @healthBar = new HealthBar(this)
+        # @targetTown = targetTown
 
         material = new (THREE.MeshLambertMaterial)(color: @town.color)
         @cube = new (THREE.Mesh)(new (THREE.BoxGeometry)(1, 3, 1), material)
@@ -23,6 +21,8 @@ class Agent
 
         @world = world
         @target = null
+        # @targetX = @targetTown.x
+        # @targetY = @targetTown.y
 
         @speed = 0.01
         @health = 1000
@@ -132,14 +132,13 @@ class Agent
         if @active == true
             @healthBar.update()
 
-            if @target == null
-                if @isGuard == false
-                    @updateTarget()
-                else
-                    @target = @seekTarget()
-                    if @target != null
-                        @targetX = @target.x
-                        @targetY = @target.y
+            if @isGuard == false
+                @updateTarget()
+            else
+                @target = @seekTarget()
+                if @target != null
+                    @targetX = @target.x
+                    @targetY = @target.y
 
             if @target != null
                 @moveTowardsTarget()
@@ -148,7 +147,18 @@ class Agent
                     @moveToBase()
 
     moveToBase: () ->
-        @moveToCoordinates(@homeGuardX, @homeGuardY)
+        xDistance = @homeGuardX - @x
+        yDistance = @homeGuardY - @y
+
+        hyp = Math.sqrt( (xDistance * xDistance) + (yDistance * yDistance))
+        xDistance /= hyp
+        yDistance /= hyp
+
+        @x += xDistance * @speed
+        @y += yDistance * @speed
+
+        @cube.position.x = @x * 5
+        @cube.position.z = @y * 5
 
 
     checkAgentsHealth: () ->
@@ -170,17 +180,11 @@ class Agent
 
     attackTarget: () ->
         if(@target instanceof Town)
-            if @target != @town.id
-                @damage(1) #REMOVE later
-                @target.damageTown(this, 1)
-            else
-                @target = null
+            @damage(1) #REMOVE later
+            @target.damageTown(this, 1)
         else if(@target instanceof Agent)
-            if @target.active == true
-                @target.damage(1)
-                @cube.rotation.y += 0.2
-            else
-                @target = null
+            @target.damage(1)
+            @cube.rotation.y += 0.2
         else
             @cube.rotation.z += 1
 
@@ -193,66 +197,22 @@ class Agent
 
     destroyAgent: () ->
         @active = false
-        @healthBar.destroy()
-        # @town.removeAgent(this)
-        # @town.world.scene.remove @cube
+
 
 
     moveTowardsTarget: () ->
         if @isAtTarget()
             @attackTarget()
         else
-            @moveToCoordinates(@targetX, @targetY)
-            #  @moveOnPath()
+            xDistance = @targetX - @x
+            yDistance = @targetY - @y
 
+            hyp = Math.sqrt( (xDistance * xDistance) + (yDistance * yDistance))
+            xDistance /= hyp
+            yDistance /= hyp
 
-    moveOnPath: () ->
-        if @path.length == 0
-            #generate path
-            start = {}
-            start.x = @x
-            start.y = @y
-            end = {}
-            end.x = @targetX
-            end.y = @targetY
-            @path = @pathfinder.findPath(start, end)
+            @x += xDistance * @speed
+            @y += yDistance * @speed
 
-
-            # for pathPoint in @path
-            #     material = new (THREE.MeshLambertMaterial)(color: @town.color)
-            #     cube = new (THREE.Mesh)(new (THREE.BoxGeometry)(0.3, 5, 0.3), material)
-            #     cube.position.y = 3
-            #     cube.position.x = pathPoint.x * 5
-            #     cube.position.z = pathPoint.y * 5
-            #     cube.castShadow = false
-            #     cube.receiveShadow = false
-            #     @town.world.scene.add cube
-
-
-        else
-            #at path point?
-            pathLast = @path[0]
-
-            xDistance = pathLast.x - @x
-            yDistance = pathLast.y - @y
-            totalDistance = xDistance + yDistance
-
-            if  totalDistance < 1
-                @path.splice(0, 1)
-            else
-                @moveToCoordinates(pathLast.x, pathLast.y)
-
-
-    moveToCoordinates: (xCoord, yCoord) ->
-        xDistance = xCoord - @x
-        yDistance = yCoord - @y
-
-        hyp = Math.sqrt( (xDistance * xDistance) + (yDistance * yDistance))
-        xDistance /= hyp
-        yDistance /= hyp
-
-        @x += xDistance * @speed
-        @y += yDistance * @speed
-
-        @cube.position.x = @x * 5
-        @cube.position.z = @y * 5
+            @cube.position.x = @x * 5
+            @cube.position.z = @y * 5
