@@ -5,6 +5,7 @@ logs
 .DS_Store
 
 tmp/
+static/tmp
 
 # Runtime data
 pids
