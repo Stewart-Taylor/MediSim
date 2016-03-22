@@ -69,3 +69,18 @@ canvas
 .town8{
     background: #8e44ad;
 }
+
+
+.github_button{
+    position: fixed;
+    top: 0px;
+    right: 0px;
+    margin: 10px;
+    text-decoration: none;
+    color: #80888c;
+    font-family: 'proxima nova', sans-serif
+}
+
+.github_button:hover{
+    color: #58676F;
+}

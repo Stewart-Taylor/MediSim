@@ -4,6 +4,7 @@
   "version": "0.0.1",
   "private": true,
   "dependencies": {
+    "grunt-http-server": "^1.14.0"
   },
   "devDependencies": {
     "coffee-script": "~1.9.0",
