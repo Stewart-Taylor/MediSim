@@ -27,3 +27,7 @@ class HealthBar
         if @agent.active == false
             @cube.position.y = 99
         #update the health bar to
+
+
+    destroy: () ->
+        @agent.town.world.scene.remove @cube

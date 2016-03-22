@@ -426,6 +426,13 @@ class Town
         @claimTile(x + 1, y + 1)
 
 
+    removeAgent: (removeAgent) ->
+        removeAgentIndex = @agents.indexOf(removeAgent)
+        @agents.splice(removeAgentIndex, 1)
+        @world.agentManager.removeAgent(removeAgent)
+
+
+
     claimTile: (x,y) ->
         claimTile = @world.getTile(x,y)
         if claimTile?
