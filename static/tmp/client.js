@@ -1,14 +1,12 @@
 (function() {
-  var Agent, AgentManager, Building, CameraManager, ControlManager, Farm, GameManager, HealthBar, LevelManager, LightManager, PathFinder, PathFinderTester, TOWN_COLORS, TOWN_COUNT, Tile, Town, World, WorldGenerator, gameManager;
+  var Agent, AgentManager, Building, CameraManager, ControlManager, Farm, GameManager, HealthBar, LevelManager, LightManager, TOWN_COLORS, TOWN_COUNT, Tile, Town, World, WorldGenerator, gameManager;
 
   Agent = (function() {
-    function Agent(pathfinder, world, town, x, y, isGuard) {
+    function Agent(world, town, x, y, isGuard) {
       var material;
       this.x = x;
       this.y = y;
       this.town = town;
-      this.pathfinder = pathfinder;
-      this.path = [];
       this.healthBar = new HealthBar(this);
       material = new THREE.MeshLambertMaterial({
         color: this.town.color
@@ -149,15 +147,13 @@
       this.checkAgentsHealth();
       if (this.active === true) {
         this.healthBar.update();
-        if (this.target === null) {
-          if (this.isGuard === false) {
-            this.updateTarget();
-          } else {
-            this.target = this.seekTarget();
-            if (this.target !== null) {
-              this.targetX = this.target.x;
-              this.targetY = this.target.y;
-            }
+        if (this.isGuard === false) {
+          this.updateTarget();
+        } else {
+          this.target = this.seekTarget();
+          if (this.target !== null) {
+            this.targetX = this.target.x;
+            this.targetY = this.target.y;
           }
         }
         if (this.target !== null) {
@@ -171,7 +167,16 @@
     };
 
     Agent.prototype.moveToBase = function() {
-      return this.moveToCoordinates(this.homeGuardX, this.homeGuardY);
+      var hyp, xDistance, yDistance;
+      xDistance = this.homeGuardX - this.x;
+      yDistance = this.homeGuardY - this.y;
+      hyp = Math.sqrt((xDistance * xDistance) + (yDistance * yDistance));
+      xDistance /= hyp;
+      yDistance /= hyp;
+      this.x += xDistance * this.speed;
+      this.y += yDistance * this.speed;
+      this.cube.position.x = this.x * 5;
+      return this.cube.position.z = this.y * 5;
     };
 
     Agent.prototype.checkAgentsHealth = function() {
@@ -194,19 +199,11 @@
 
     Agent.prototype.attackTarget = function() {
       if (this.target instanceof Town) {
-        if (this.target !== this.town.id) {
-          this.damage(1);
-          return this.target.damageTown(this, 1);
-        } else {
-          return this.target = null;
-        }
+        this.damage(1);
+        return this.target.damageTown(this, 1);
       } else if (this.target instanceof Agent) {
-        if (this.target.active === true) {
-          this.target.damage(1);
-          return this.cube.rotation.y += 0.2;
-        } else {
-          return this.target = null;
-        }
+        this.target.damage(1);
+        return this.cube.rotation.y += 0.2;
       } else {
         return this.cube.rotation.z += 1;
       }
@@ -220,52 +217,24 @@
     };
 
     Agent.prototype.destroyAgent = function() {
-      this.active = false;
-      return this.healthBar.destroy();
+      return this.active = false;
     };
 
     Agent.prototype.moveTowardsTarget = function() {
+      var hyp, xDistance, yDistance;
       if (this.isAtTarget()) {
         return this.attackTarget();
       } else {
-        return this.moveToCoordinates(this.targetX, this.targetY);
+        xDistance = this.targetX - this.x;
+        yDistance = this.targetY - this.y;
+        hyp = Math.sqrt((xDistance * xDistance) + (yDistance * yDistance));
+        xDistance /= hyp;
+        yDistance /= hyp;
+        this.x += xDistance * this.speed;
+        this.y += yDistance * this.speed;
+        this.cube.position.x = this.x * 5;
+        return this.cube.position.z = this.y * 5;
       }
-    };
-
-    Agent.prototype.moveOnPath = function() {
-      var end, pathLast, start, totalDistance, xDistance, yDistance;
-      if (this.path.length === 0) {
-        start = {};
-        start.x = this.x;
-        start.y = this.y;
-        end = {};
-        end.x = this.targetX;
-        end.y = this.targetY;
-        return this.path = this.pathfinder.findPath(start, end);
-      } else {
-        pathLast = this.path[0];
-        xDistance = pathLast.x - this.x;
-        yDistance = pathLast.y - this.y;
-        totalDistance = xDistance + yDistance;
-        if (totalDistance < 1) {
-          return this.path.splice(0, 1);
-        } else {
-          return this.moveToCoordinates(pathLast.x, pathLast.y);
-        }
-      }
-    };
-
-    Agent.prototype.moveToCoordinates = function(xCoord, yCoord) {
-      var hyp, xDistance, yDistance;
-      xDistance = xCoord - this.x;
-      yDistance = yCoord - this.y;
-      hyp = Math.sqrt((xDistance * xDistance) + (yDistance * yDistance));
-      xDistance /= hyp;
-      yDistance /= hyp;
-      this.x += xDistance * this.speed;
-      this.y += yDistance * this.speed;
-      this.cube.position.x = this.x * 5;
-      return this.cube.position.z = this.y * 5;
     };
 
     return Agent;
@@ -298,317 +267,14 @@
       }
     };
 
-    HealthBar.prototype.destroy = function() {
-      return this.agent.town.world.scene.remove(this.cube);
-    };
-
     return HealthBar;
-
-  })();
-
-  PathFinder = (function() {
-    function PathFinder(width, height, map) {
-      var gridTile, j, len, mapTile;
-      this.width = width;
-      this.height = height;
-      this.grid = this.createArray(width, height);
-      for (j = 0, len = map.length; j < len; j++) {
-        mapTile = map[j];
-        gridTile = {};
-        gridTile.x = mapTile.x;
-        gridTile.y = mapTile.y;
-        gridTile.f = 0;
-        gridTile.g = 0;
-        gridTile.h = 0;
-        gridTile.debug = "";
-        if (mapTile.isLand === true) {
-          gridTile.isWall = false;
-        } else {
-          gridTile.isWall = true;
-        }
-        this.grid[gridTile.x][gridTile.y] = gridTile;
-      }
-    }
-
-    PathFinder.prototype.createArray = function(length) {
-      var args, arr, i;
-      arr = new Array(length || 0);
-      i = length;
-      if (arguments.length > 1) {
-        args = Array.prototype.slice.call(arguments, 1);
-        while (i--) {
-          arr[length - 1 - i] = this.createArray.apply(this, args);
-        }
-      }
-      return arr;
-    };
-
-    PathFinder.prototype.findPath = function(start, end) {
-      var closedList, curr, currentNode, gScore, gScoreIsBest, i, lowInd, neighbor, neighbors, openList, ret, x;
-      openList = [];
-      closedList = [];
-      openList.push(start);
-      while (openList.length > 0) {
-        lowInd = 0;
-        i = 0;
-        while (i < openList.length) {
-          if (openList[i].f < openList[lowInd].f) {
-            lowInd = i;
-          }
-          i++;
-        }
-        currentNode = openList[lowInd];
-        if (currentNode.x === end.x && currentNode.y === end.y) {
-          curr = currentNode;
-          ret = [];
-          while (curr.parent) {
-            ret.push(curr);
-            curr = curr.parent;
-          }
-          return ret.reverse();
-        }
-        this.removeGraphNode(openList, currentNode);
-        closedList.push(currentNode);
-        neighbors = this.neighbors(this.grid, currentNode);
-        x = 0;
-        while (x < neighbors.length) {
-          neighbor = neighbors[x];
-          x++;
-          if ((this.hasGraphNode(closedList, neighbor)) || neighbor.isWall === true) {
-            continue;
-          }
-          gScore = currentNode.g + 1;
-          gScoreIsBest = false;
-          if (!this.hasGraphNode(openList, neighbor)) {
-            gScoreIsBest = true;
-            neighbor.h = this.heuristic(neighbor, end);
-            openList.push(neighbor);
-          } else if (gScore < neighbor.g) {
-            gScoreIsBest = true;
-          }
-          if (gScoreIsBest) {
-            neighbor.parent = currentNode;
-            neighbor.g = gScore;
-            neighbor.f = neighbor.g + neighbor.h;
-          }
-        }
-      }
-      return [];
-    };
-
-    PathFinder.prototype.removeGraphNode = function(list, node) {
-      var index;
-      index = list.indexOf(node);
-      return list.splice(index, 1);
-    };
-
-    PathFinder.prototype.hasGraphNode = function(list, node) {
-      if (list.indexOf(node) > -1) {
-        return true;
-      } else {
-        return false;
-      }
-    };
-
-    PathFinder.prototype.heuristic = function(pos1, pos2) {
-      var dist;
-      return dist = Math.sqrt(Math.pow(pos1.x - pos2.x, 2) + Math.pow(pos1.y - pos2.y, 2));
-    };
-
-    PathFinder.prototype.neighbors = function(grid, node) {
-      var item, ret, x, y;
-      ret = [];
-      x = node.x;
-      y = node.y;
-      item = this.addTile(x - 1, y - 1);
-      if (item != null) {
-        ret.push(item);
-      }
-      item = this.addTile(x, y - 1);
-      if (item != null) {
-        ret.push(item);
-      }
-      item = this.addTile(x + 1, y - 1);
-      if (item != null) {
-        ret.push(item);
-      }
-      item = this.addTile(x - 1, y);
-      if (item != null) {
-        ret.push(item);
-      }
-      item = this.addTile(x + 1, y);
-      if (item != null) {
-        ret.push(item);
-      }
-      item = this.addTile(x - 1, y + 1);
-      if (item != null) {
-        ret.push(item);
-      }
-      item = this.addTile(x, y + 1);
-      if (item != null) {
-        ret.push(item);
-      }
-      item = this.addTile(x + 1, y + 1);
-      if (item != null) {
-        ret.push(item);
-      }
-      return ret;
-    };
-
-    PathFinder.prototype.addTile = function(x, y) {
-      var tTile;
-      console.log(x + "," + y);
-      tTile = this.grid[Math.round(x)][Math.round(y)];
-      if (tTile != null) {
-        return tTile;
-      } else {
-        return null;
-      }
-    };
-
-    return PathFinder;
-
-  })();
-
-  PathFinderTester = (function() {
-    function PathFinderTester(PathFinder) {
-      var WORLD_HEIGHT, WORLD_WIDTH, getTile, grid, isPath, path, pathFinder, printGrid, printPath, printPathGrid, rv, start, target, tile, x, y;
-      WORLD_HEIGHT = 30;
-      WORLD_WIDTH = 50;
-      grid = [];
-      y = 0;
-      while (y < WORLD_HEIGHT) {
-        x = 0;
-        while (x < WORLD_WIDTH) {
-          tile = {};
-          tile.x = x;
-          tile.y = y;
-          rv = Math.random();
-          if (rv < 0.2) {
-            tile.isLand = false;
-          } else {
-            tile.isLand = true;
-          }
-          grid.push(tile);
-          x++;
-        }
-        y++;
-      }
-      pathFinder = new PathFinder(WORLD_WIDTH, WORLD_HEIGHT, grid);
-      start = {};
-      start.x = 1;
-      start.y = 1;
-      target = {};
-      target.x = 20;
-      target.y = 20;
-      path = pathFinder.findPath(start, target);
-      getTile = function(x, y) {
-        var j, len;
-        for (j = 0, len = grid.length; j < len; j++) {
-          tile = grid[j];
-          if ((tile.x === x) && (tile.y === y)) {
-            return tile;
-          }
-        }
-        return null;
-      };
-      isPath = function(paths, x, y) {
-        var j, len, pathT;
-        for (j = 0, len = paths.length; j < len; j++) {
-          pathT = paths[j];
-          if ((pathT.x === x) && (pathT.y === y)) {
-            return true;
-          }
-        }
-        return false;
-      };
-      printGrid = function() {
-        var lineString, temp;
-        console.log("World Generated");
-        console.log();
-        y = 0;
-        while (y < WORLD_HEIGHT) {
-          lineString = "";
-          x = 0;
-          while (x < WORLD_WIDTH) {
-            temp = getTile(x, y);
-            if (temp.isLand) {
-              lineString += ".";
-            } else {
-              lineString += "#";
-            }
-            x++;
-          }
-          console.log(lineString);
-          y++;
-        }
-        console.log();
-        return console.log();
-      };
-      printPath = function(path) {
-        var lineString;
-        console.log("Path Generated");
-        console.log();
-        y = 0;
-        while (y < WORLD_HEIGHT) {
-          lineString = "";
-          x = 0;
-          while (x < WORLD_WIDTH) {
-            if (isPath(path, x, y)) {
-              lineString += ".";
-            } else {
-              lineString += "#";
-            }
-            x++;
-          }
-          console.log(lineString);
-          y++;
-        }
-        console.log();
-        return console.log();
-      };
-      printPathGrid = function(path) {
-        var lineString, temp;
-        console.log("Generated");
-        console.log();
-        y = 0;
-        while (y < WORLD_HEIGHT) {
-          lineString = "";
-          x = 0;
-          while (x < WORLD_WIDTH) {
-            temp = getTile(x, y);
-            if (temp.isLand) {
-              if (isPath(path, x, y)) {
-                lineString += "o";
-              } else {
-                lineString += ".";
-              }
-            } else {
-              lineString += "#";
-            }
-            x++;
-          }
-          console.log(lineString);
-          y++;
-        }
-        console.log();
-        return console.log();
-      };
-      printGrid();
-      printPath(path);
-      printPathGrid(path);
-    }
-
-    return PathFinderTester;
 
   })();
 
   AgentManager = (function() {
     function AgentManager(scene, world) {
       console.log("Agent Manager Module Loaded");
-      this.world = world;
       this.agents = [];
-      this.pathfinder = new PathFinder(world.WORLD_WIDTH, world.WORLD_HEIGHT, world.tilesPF);
     }
 
     AgentManager.prototype.update = function() {
@@ -622,15 +288,9 @@
       return results;
     };
 
-    AgentManager.prototype.removeAgent = function(removeAgent) {
-      var removeAgentIndex;
-      removeAgentIndex = this.agents.indexOf(removeAgent);
-      return this.agents.splice(removeAgentIndex, 1);
-    };
-
     AgentManager.prototype.addAgent = function(town, targetTown, x, y, isGuard) {
       var agent;
-      agent = new Agent(this.pathfinder, town, targetTown, x, y, isGuard);
+      agent = new Agent(town, targetTown, x, y, isGuard);
       this.agents.push(agent);
       return agent;
     };
@@ -642,6 +302,7 @@
   CameraManager = (function() {
     function CameraManager(scene) {
       var aspect, far, fov, near;
+      console.log("Camera Module Loaded");
       fov = 60;
       aspect = window.innerWidth / window.innerHeight;
       near = 1;
@@ -948,12 +609,6 @@
           color: 0x95a5a6
         });
         cube = new THREE.Mesh(new THREE.CylinderGeometry(0, 7, height, 10, 10, false), mountainMaterial);
-      } else if (type === 4) {
-        this.isLand = true;
-        landMaterial = new THREE.MeshLambertMaterial({
-          color: tileColor
-        });
-        cube = new THREE.Mesh(new THREE.BoxGeometry(TILE_WIDTH, 1, TILE_HEIGHT), landMaterial);
       }
       cube.position.y = 1;
       cube.position.x = x * 5;
@@ -1159,11 +814,7 @@
         results = [];
         for (k = 0, len1 = ref1.length; k < len1; k++) {
           agent = ref1[k];
-          if (agent != null) {
-            results.push(agent.damage(9999999));
-          } else {
-            results.push(void 0);
-          }
+          results.push(agent.damage(9999999));
         }
         return results;
       }
@@ -1186,7 +837,7 @@
       this.gold -= this.getUnitCost();
       rValue = Math.random();
       if (rValue > this.aggressiveness) {
-        agent = this.world.agentManager.addAgent(this.world, this, this.x, this.y, false);
+        agent = this.world.agentManager.addAgent(this.world, this, this.x, this.y, true);
       } else {
         agent = this.world.agentManager.addAgent(this.world, this, this.x, this.y, false);
       }
@@ -1429,13 +1080,6 @@
       return this.claimTile(x + 1, y + 1);
     };
 
-    Town.prototype.removeAgent = function(removeAgent) {
-      var removeAgentIndex;
-      removeAgentIndex = this.agents.indexOf(removeAgent);
-      this.agents.splice(removeAgentIndex, 1);
-      return this.world.agentManager.removeAgent(removeAgent);
-    };
-
     Town.prototype.claimTile = function(x, y) {
       var claimTile;
       claimTile = this.world.getTile(x, y);
@@ -1463,12 +1107,11 @@
       this.scene = scene;
       this.towns = [];
       this.tiles = [];
-      this.tilesPF = [];
+      this.agentManager = new AgentManager(this);
       worldGenerator = new WorldGenerator();
       this.WORLD_WIDTH = worldGenerator.WORLD_WIDTH;
       this.WORLD_HEIGHT = worldGenerator.WORLD_HEIGHT;
       this.createWorld(worldGenerator);
-      this.agentManager = new AgentManager(scene, this);
       this.placeTowns(worldGenerator);
     }
 
@@ -1480,8 +1123,7 @@
       for (j = 0, len = grid.length; j < len; j++) {
         gridTile = grid[j];
         newTile = new Tile(this, gridTile.x, gridTile.y, gridTile.value, gridTile.type);
-        this.tiles[gridTile.x][gridTile.y] = newTile;
-        results.push(this.tilesPF.push(newTile));
+        results.push(this.tiles[gridTile.x][gridTile.y] = newTile);
       }
       return results;
     };
@@ -1507,72 +1149,19 @@
         x = Math.floor((Math.random() * this.WORLD_WIDTH - 1) + 1);
         y = Math.floor((Math.random() * this.WORLD_HEIGHT - 1) + 1);
         townTile = this.getTile(x, y);
-        if (this.canPlaceTown(townTile)) {
-          town = new Town(this, placeCount + 1, TOWN_COLORS[placeCount], x, y);
-          this.towns.push(town);
-          results.push(placeCount++);
+        if (townTile != null) {
+          if (townTile.isLand) {
+            town = new Town(this, placeCount + 1, TOWN_COLORS[placeCount], x, y);
+            this.towns.push(town);
+            results.push(placeCount++);
+          } else {
+            results.push(void 0);
+          }
         } else {
           results.push(void 0);
         }
       }
       return results;
-    };
-
-    World.prototype.canPlaceTown = function(townTile) {
-      var invalidCount, j, len, ref, town, xDistance, yDistance;
-      if (townTile != null) {
-        if (townTile.isLand) {
-          invalidCount = 0;
-          if (this.isAdjacentTileLand(townTile.x - 1, townTile.y - 1) === false) {
-            invalidCount++;
-          }
-          if (this.isAdjacentTileLand(townTile.x, townTile.y - 1) === false) {
-            invalidCount++;
-          }
-          if (this.isAdjacentTileLand(townTile.x + 1, townTile.y - 1) === false) {
-            invalidCount++;
-          }
-          if (this.isAdjacentTileLand(townTile.x - 1, townTile.y) === false) {
-            invalidCount++;
-          }
-          if (this.isAdjacentTileLand(townTile.x + 1, townTile.y) === false) {
-            invalidCount++;
-          }
-          if (this.isAdjacentTileLand(townTile.x - 1, townTile.y + 1) === false) {
-            invalidCount++;
-          }
-          if (this.isAdjacentTileLand(townTile.x, townTile.y + 1) === false) {
-            invalidCount++;
-          }
-          if (this.isAdjacentTileLand(townTile.x + 1, townTile.y + 1) === false) {
-            invalidCount++;
-          }
-          if (invalidCount === 0) {
-            ref = this.towns;
-            for (j = 0, len = ref.length; j < len; j++) {
-              town = ref[j];
-              xDistance = Math.abs(townTile.x - town.x);
-              yDistance = Math.abs(townTile.y - town.y);
-              if ((xDistance + yDistance) < 8) {
-                return false;
-              }
-            }
-            return true;
-          }
-        }
-      }
-      return false;
-    };
-
-    World.prototype.isAdjacentTileLand = function(x, y) {
-      var tile;
-      tile = this.getTile(x, y);
-      if (tile != null) {
-        if (tile.isLand) {
-          return true;
-        }
-      }
-      return false;
     };
 
     World.prototype.update = function() {
@@ -1599,7 +1188,7 @@
   })();
 
   WorldGenerator = (function() {
-    var COAST_ERODE_PASSES, LAKE_TILE, LAKE_TILE_CHAR, LAND_TILE, LAND_TILE_CHAR, MOUNTAIN_PASSES, MOUNTAIN_TILE, MOUNTAIN_TILE_CHAR, TREE_PASSES, TREE_TILE, TREE_TILE_CHAR, WATER_TILE, WATER_TILE_CHAR, WORLD_HEIGHT, WORLD_WIDTH;
+    var COAST_ERODE_PASSES, LAND_TILE, LAND_TILE_CHAR, MOUNTAIN_PASSES, MOUNTAIN_TILE, MOUNTAIN_TILE_CHAR, WATER_TILE, WATER_TILE_CHAR, WORLD_HEIGHT, WORLD_WIDTH;
 
     WORLD_WIDTH = 60;
 
@@ -1608,8 +1197,6 @@
     COAST_ERODE_PASSES = 5;
 
     MOUNTAIN_PASSES = 7;
-
-    TREE_PASSES = 7;
 
     LAND_TILE = 1;
 
@@ -1622,14 +1209,6 @@
     MOUNTAIN_TILE = 3;
 
     MOUNTAIN_TILE_CHAR = "^";
-
-    TREE_TILE = 4;
-
-    TREE_TILE_CHAR = "|";
-
-    LAKE_TILE = 5;
-
-    LAKE_TILE_CHAR = ".";
 
     function WorldGenerator() {
       this.WORLD_WIDTH = 60;
@@ -1646,152 +1225,8 @@
       this.coastErode();
       this.addMountains();
       this.generateYield();
-      this.addLakes();
-      this.addTrees();
-      this.convertLakeToWater();
       this.time_taken = Date.now() - timestart;
       return this.map;
-    };
-
-    WorldGenerator.prototype.convertLakeToWater = function() {
-      var j, len, ref, results, tile;
-      ref = this.map;
-      results = [];
-      for (j = 0, len = ref.length; j < len; j++) {
-        tile = ref[j];
-        if (tile.type === LAKE_TILE) {
-          results.push(tile.type = WATER_TILE);
-        } else {
-          results.push(void 0);
-        }
-      }
-      return results;
-    };
-
-    WorldGenerator.prototype.addLakes = function() {
-      var mountainPlaces, mountainTiles, mpass_value, passes, rX, rY, results, tile;
-      mountainTiles = [];
-      mountainPlaces = 2;
-      while (mountainPlaces > 0) {
-        rX = Math.floor(Math.random() * WORLD_WIDTH) + 1;
-        rY = Math.floor(Math.random() * WORLD_HEIGHT) + 1;
-        tile = this.getTile(rX, rY);
-        if (tile != null) {
-          if (tile.type === LAND_TILE) {
-            tile.type = LAKE_TILE;
-            mountainTiles.push(tile);
-            mountainPlaces--;
-          }
-        }
-      }
-      passes = Math.floor(Math.random() * TREE_PASSES) + 8;
-      results = [];
-      while (passes > 0) {
-        this.lakePass();
-        this.mpass_value -= 0.1;
-        if (mpass_value < 0.1) {
-          mpass_value = 0.1;
-        }
-        results.push(passes--);
-      }
-      return results;
-    };
-
-    WorldGenerator.prototype.lakePass = function() {
-      var j, k, len, len1, mountainTile, mountainTiles, ref, results, tile;
-      mountainTiles = [];
-      ref = this.map;
-      for (j = 0, len = ref.length; j < len; j++) {
-        tile = ref[j];
-        if (tile.type === LAKE_TILE) {
-          mountainTiles.push(tile);
-        }
-      }
-      results = [];
-      for (k = 0, len1 = mountainTiles.length; k < len1; k++) {
-        mountainTile = mountainTiles[k];
-        this.convertLakeTile(mountainTile.x, mountainTile.y - 1);
-        this.convertLakeTile(mountainTile.x + 1, mountainTile.y);
-        this.convertLakeTile(mountainTile.x - 1, mountainTile.y);
-        results.push(this.convertLakeTile(mountainTile.x, mountainTile.y + 1));
-      }
-      return results;
-    };
-
-    WorldGenerator.prototype.convertLakeTile = function(x, y) {
-      var rValue, tile;
-      tile = this.getTile(x, y);
-      if (tile != null) {
-        rValue = Math.random();
-        if (rValue < 0.5) {
-          if (tile.type === LAND_TILE) {
-            return tile.type = LAKE_TILE;
-          }
-        }
-      }
-    };
-
-    WorldGenerator.prototype.addTrees = function() {
-      var mountainPlaces, mountainTiles, mpass_value, passes, rX, rY, results, tile;
-      mountainTiles = [];
-      mountainPlaces = 7;
-      while (mountainPlaces > 0) {
-        rX = Math.floor(Math.random() * WORLD_WIDTH) + 1;
-        rY = Math.floor(Math.random() * WORLD_HEIGHT) + 1;
-        tile = this.getTile(rX, rY);
-        if (tile != null) {
-          if (tile.type === LAND_TILE) {
-            tile.type = TREE_TILE;
-            mountainTiles.push(tile);
-            mountainPlaces--;
-          }
-        }
-      }
-      passes = Math.floor(Math.random() * TREE_PASSES) + 3;
-      results = [];
-      while (passes > 0) {
-        this.treePass();
-        this.mpass_value -= 0.1;
-        if (mpass_value < 0.1) {
-          mpass_value = 0.1;
-        }
-        results.push(passes--);
-      }
-      return results;
-    };
-
-    WorldGenerator.prototype.treePass = function() {
-      var j, k, len, len1, mountainTile, mountainTiles, ref, results, tile;
-      mountainTiles = [];
-      ref = this.map;
-      for (j = 0, len = ref.length; j < len; j++) {
-        tile = ref[j];
-        if (tile.type === TREE_TILE) {
-          mountainTiles.push(tile);
-        }
-      }
-      results = [];
-      for (k = 0, len1 = mountainTiles.length; k < len1; k++) {
-        mountainTile = mountainTiles[k];
-        this.convertTreeTile(mountainTile.x, mountainTile.y - 1);
-        this.convertTreeTile(mountainTile.x + 1, mountainTile.y);
-        this.convertTreeTile(mountainTile.x - 1, mountainTile.y);
-        results.push(this.convertTreeTile(mountainTile.x, mountainTile.y + 1));
-      }
-      return results;
-    };
-
-    WorldGenerator.prototype.convertTreeTile = function(x, y) {
-      var rValue, tile;
-      tile = this.getTile(x, y);
-      if (tile != null) {
-        rValue = Math.random();
-        if (rValue < 0.5) {
-          if (tile.type === LAND_TILE) {
-            return tile.type = TREE_TILE;
-          }
-        }
-      }
     };
 
     WorldGenerator.prototype.generateYield = function() {
@@ -2048,8 +1483,6 @@
         return WATER_TILE_CHAR;
       } else if (type === MOUNTAIN_TILE) {
         return MOUNTAIN_TILE_CHAR;
-      } else if (type === TREE_TILE) {
-        return TREE_TILE_CHAR;
       }
     };
 
